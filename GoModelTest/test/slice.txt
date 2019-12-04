@@ -1,0 +1,23 @@
+
+package main
+
+import "fmt"
+
+func changes(i []int) []int{
+	i[0]=0
+	return i
+}
+
+func changea(i [3]int) [3]int{
+	i[0]=0
+	return i
+}
+func main(){
+	a:=[3]int{1,2,3}
+	s:=[]int{4,5,6}
+	changea(a)
+	fmt.Println(a)
+	changes(s)
+	fmt.Println(s)
+}
+

@@ -1,0 +1,2 @@
+libraaddr=10.147.9.90;linein=1;lineout=2
+totalnum=0;innum=0;outnum=0

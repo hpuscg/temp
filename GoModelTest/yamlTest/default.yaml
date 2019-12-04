@@ -1,0 +1,43 @@
+config:
+    eventserver:
+        timeformat_url: 
+        content_url: 
+        vibo_on: 
+        filters: 
+        data_path: "works/flowservice"
+        event_status_ttl: 10
+        video_cache_ttl: 100
+        video_storage_ttl_days: 30
+        report:
+        listenport: ":1357"
+        persistence_cycle: 60
+        clear_cycle: 3600
+        disableevent: []
+        full_video_storage_ttl_days: 3
+        pub_db_url: "127.0.0.1:8880/api/db"
+        pub_vibo_url: "127.0.0.1:8880/api/vibo"
+        tss_ttl_days: 30
+    global:
+        redis: 
+        redispassword: 
+        storage: "weedfs"
+        weedserver: "127.0.0.1:9333"
+        s3region: 
+        s3accesskey: 
+        s3secretkey: 
+    topic:
+        db_topic: "db_events"
+        tss_topic: "tss_events"
+        vibo_topic: "vibo_events"
+        event_topic: "events"
+        ca_topic: "ca_events"
+        video_topic: "slices"
+    nsqaddr:
+        db_topic_server: "127.0.0.1:4150"
+        tss_topic_server: "127.0.0.1:4150"
+        vibo_topic_server: "127.0.0.1:4150"
+        event_topic_server: "127.0.0.1:4150"
+        ca_topic_server: "127.0.0.1:4150"
+        video_topic_server: "127.0.0.1:4150"
+    rule:
+        latch_legacy: '{"Id":"latch_legacy","Enabled":true,"TimeRange":[0,0],"UpperBound":0,"LowerBound":0}'

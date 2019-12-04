@@ -1,0 +1,2 @@
+libraaddr=192.168.19.234
+eventtype=0

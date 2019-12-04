@@ -1,0 +1,6 @@
+dooraddr=192.168.19.245;linein=1;lineout=2
+latchaddr=192.168.100.232;sensorid=a1f20e44503436343300000500d50024
+limitnum=2
+viboserver=192.168.100.235
+singlepeopletime=10
+singlemoneytime=10

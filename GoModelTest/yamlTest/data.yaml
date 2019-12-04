@@ -1,0 +1,100 @@
+config:
+  base:
+    clear_cycle: 3600
+    disableevent: '[]'
+    event_status_ttl: 10
+    listenport: 1357
+    persistence_cycle: 60
+    video_cache_ttl: 100
+    video_storage_ttl_days: 30
+  basic:
+    full_video_storage_ttl_days: 3
+    pub_db_url: 127.0.0.1:8880/api/db
+    pub_vibo_url: 127.0.0.1:8881/api/vibo
+    tss_ttl_days: 30
+  rule:
+    approaching_legacy:
+      Enabled: true
+      Id: approaching_legacy
+      LowerBound: 0
+      TimeRange:
+      - 0
+      - 0
+      UpperBound: 0.9
+    distance_legacy:
+      Enabled: true
+      Id: distance_legacy
+      LowerBound: 0
+      TimeRange:
+      - 0
+      - 0
+      UpperBound: 100000
+    dwellingtime_legacy:
+      Enabled: true
+      Id: dwellingtime_legacy
+      LowerBound: 0
+      TimeRange:
+      - 0
+      - 0
+      UpperBound: 1800
+    population_legacy:
+      Enabled: true
+      Id: population_legacy
+      LowerBound: 0
+      TimeRange:
+      - 0
+      - 0
+      UpperBound: 40
+    singlepeoplein_legacy:
+      Enabled: false
+      Id: singlepeoplein_legacy
+      LowerBound: 0
+      TimeRange:
+      - 0
+      - 0
+      UpperBound: 10
+      WeekdayRange: 0
+    velocity_legacy:
+      Enabled: true
+      Id: velocity_legacy
+      LowerBound: 0
+      TimeRange:
+      - 0
+      - 0
+      UpperBound: 2200
+  test: null
+  test2: '{"name":"lisi","age":12}'
+  test3: '{"Id":"singlepeoplein_legacy","Query":"(.Attribute.DeveloperId==\"DeepGlint\")\u0026\u0026(.Attribute.ProjectId==\"DeepGlint\")\u0026\u0026(.Attribute.QueryId==\"SinglePeopleIn\")\u0026\u0026((.Duration
+    \u003e 10)||(.Duration \u003c 0))\u0026\u0026(.Population == 1)","TimeRange":[0,0],"EventBaseType":1000,"UpperBound":10,"LowerBound":0}'
+data: "yes"
+hotspot:
+  door: {}
+  fence:
+    fence_1:
+      Enabled: true
+      Id: fence_1
+      InsideAlert: false
+      InsidePopulationAlert: true
+      InwardAlert: false
+      OutsideAlert: false
+      OutsidePopulationAlert: false
+      OutwardAlert: false
+      PopulationThreshold:
+      - 0
+      - 0
+      - 0
+      - 0
+      RawPoints:
+      - -732.4144287109375
+      - 3626.351806640625
+      - 56.708740234375
+      - 446.73101806640625
+      - 3290.80078125
+      - 77.547607421875
+      - 219.53619384765625
+      - 1840.7864990234375
+      - 28.4267578125
+      - -894.9857177734375
+      - 2019.6888427734375
+      - 58.470947265625
+      Type: 1

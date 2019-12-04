@@ -1,0 +1,7 @@
+peoplenum=2
+timelimitin=10
+timelimitout=10
+libraaddr=192.168.100.223
+linein=1
+lineout=2
+viboserver=192.168.100.235

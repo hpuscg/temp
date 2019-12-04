@@ -1,0 +1,110 @@
+/*
+#Time      :  2019/6/11 下午3:55
+#Author    :  chuangangshen@deepglint.com
+#File      :  scpOniFile.go
+#Software  :  GoLand
+*/
+package main
+
+import (
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"fmt"
+	"time"
+	"path"
+	"io/ioutil"
+	"os"
+	"flag"
+)
+
+var (
+	User string
+	Password string
+	Host string
+	Port int
+	FileName string
+	RemotePath string
+)
+
+func main() {
+	flag.StringVar(&User, "user", "abcms", "")
+	flag.StringVar(&Password, "password", "abcms@2019", "")
+	flag.StringVar(&Host, "host", "10.147.8.55", "")
+	flag.StringVar(&FileName, "filename", "", "")
+	flag.StringVar(&RemotePath, "remotepath", "/home/abcms/scg/", "")
+	flag.IntVar(&Port, "port", 22, "")
+	flag.Parse()
+	scpClient, err := connect(User, Password, Host, Port)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	uploadFile(scpClient, FileName, RemotePath)
+}
+
+
+// 创建connect方法
+func connect(user, password, host string, port int) (*sftp.Client, error) {
+	var (
+		auth         []ssh.AuthMethod
+		addr         string
+		clientConfig *ssh.ClientConfig
+		sshClient    *ssh.Client
+		sftpClient   *sftp.Client
+		err          error
+	)
+	// get auth method
+	auth = make([]ssh.AuthMethod, 0)
+	auth = append(auth, ssh.Password(password))
+
+	clientConfig = &ssh.ClientConfig{
+		User:            user,
+		Auth:            auth,
+		Timeout:         30 * time.Second,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //ssh.FixedHostKey(hostKey),
+	}
+
+	// connet to ssh
+	addr = fmt.Sprintf("%s:%d", host, port)
+	if sshClient, err = ssh.Dial("tcp", addr, clientConfig); err != nil {
+		return nil, err
+	}
+
+	// create sftp client
+	if sftpClient, err = sftp.NewClient(sshClient); err != nil {
+		return nil, err
+	}
+	return sftpClient, nil
+}
+
+// 上传文件
+func uploadFile(sftpClient *sftp.Client, localFilePath string, remotePath string) {
+	srcFile, err := os.Open(localFilePath)
+	if err != nil {
+		fmt.Println("os.Open error : ", localFilePath)
+		// log.Fatal(err)
+
+	}
+	defer srcFile.Close()
+
+	var remoteFileName = path.Base(localFilePath)
+
+	dstFile, err := sftpClient.Create(path.Join(remotePath, remoteFileName))
+	if err != nil {
+		fmt.Println("sftpClient.Create error : ", path.Join(remotePath, remoteFileName))
+		// log.Fatal(err)
+
+	}
+	defer dstFile.Close()
+
+	ff, err := ioutil.ReadAll(srcFile)
+	if err != nil {
+		fmt.Println("ReadAll error : ", localFilePath)
+		// log.Fatal(err)
+
+	}
+	dstFile.Write(ff)
+	fmt.Println(localFilePath + "  copy file to remote server finished!")
+}
+
+
