@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"reflect"
+	"strconv"
 )
 
 func main() {
@@ -18,7 +19,28 @@ func main() {
 	// justTest()
 	// strIntTest()
 	// stringSplit()
-	preTest()
+	// preTest()
+	stringToIntTest()
+}
+
+func stringToIntTest() {
+	var data interface{}
+	var ret int
+	var err error
+	var tmp int32 =123
+	data = tmp
+	switch data.(type) {
+	case string:
+		ret, err = strconv.Atoi(data.(string))
+		if err != nil {
+			fmt.Println(err)
+		}
+	case int:
+		ret = data.(int)
+	case int32:
+		ret = int(data.(int32))
+	}
+	fmt.Println(ret)
 }
 
 func preTest() {

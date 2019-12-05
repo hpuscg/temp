@@ -8,14 +8,53 @@ package main
 
 import (
 	"fmt"
-
 	"strings"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	httpS "github.com/deepglint/muses/util/http"
+	httpS "github.com/deepglint/flowservice/util/http"
 	"flag"
+	"github.com/deepglint/flowservice/models"
 )
+
+func main() {
+	var ip string
+	flag.StringVar(&ip, "ip", "192.168.5.178:8888", "event server ip")
+	flag.Parse()
+	// t := Teacher{}
+	// t.ShowA()
+	// getToken(ip)
+	// PostEvent(ip)
+	// GetSensorId()
+	// GetRealPeopleNum("192.168.19.247")
+	// GetRGBValue()
+	getFromT3()
+}
+
+func getFromT3() {
+	baseUrl := "http://192.168.100.170/api/l/CapsuleConfig"
+	// url := strings.Replace(baseUrl, "IP", ip, -1)
+	result, err := httpS.GetWithToken(baseUrl, models.LibraToke, "application/json")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	var ret models.ResponseData
+	err = json.Unmarshal(result, &ret)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("%+v\n", ret)
+	switch ret.Data.(type) {
+	case string:
+		fmt.Printf("%+v\n", ret.Data.(string))
+	case map[string]interface{}:
+		fmt.Printf("%+v\n", ret.Data.(map[string]interface{}))
+	}
+}
+
 
 /*func main() {
 	for true {
@@ -55,19 +94,6 @@ type Teacher struct {
 
 func (t *Teacher) ShowB() {
 	fmt.Println("teacher showB")
-}
-
-func main() {
-	var ip string
-	flag.StringVar(&ip, "ip", "192.168.5.178:8888", "event server ip")
-	flag.Parse()
-	// t := Teacher{}
-	// t.ShowA()
-	// getToken(ip)
-	// PostEvent(ip)
-	// GetSensorId()
-	// GetRealPeopleNum("192.168.19.247")
-	GetRGBValue()
 }
 
 func GetRGBValue() {
