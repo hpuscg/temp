@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"strings"
-
 	"os"
 	"bytes"
 	"encoding/json"
 	"reflect"
 	"strconv"
+	"path/filepath"
 )
 
 func main() {
@@ -20,7 +20,15 @@ func main() {
 	// strIntTest()
 	// stringSplit()
 	// preTest()
-	stringToIntTest()
+	// stringToIntTest()
+	FilePathJoinTest()
+}
+
+func FilePathJoinTest() {
+	path := filepath.Join("/data/", "123")
+	path2 := filepath.Join("/data", "123")
+	fmt.Println(path)
+	fmt.Println(path2)
 }
 
 func stringToIntTest() {
