@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"time"
 	"encoding/json"
+	"strings"
 )
 
 var (
@@ -23,6 +24,23 @@ var (
 	GetIp      bool
 	GetDocker  bool
 	IpListFile string
+	ServerTest bool
+	Image      = map[string]bool{
+		"vibo2vibo":   true,
+		"libra-cuda":  true,
+		"bumble-bee":  true,
+		"onvifserver": true,
+		"nanomsg2nsq": true,
+		"eventserver": true,
+		"foundation":  true,
+		"tunerd":      true,
+		"adu":         true,
+		"vulcand":     true,
+		"flowservice": true,
+		"nsqd-live":   true,
+		"etcd":        true,
+		"crtmpserver": true,
+	}
 )
 
 func main() {
@@ -30,6 +48,7 @@ func main() {
 	flag.StringVar(&ServerIp, "serverIp", "192.168.100.235", "网管服务器IP")
 	flag.BoolVar(&GetIp, "getIp", false, "是否从网管服务器获取其下挂载的设备IP")
 	flag.BoolVar(&GetDocker, "getDocker", false, "是否获取设备端的docker image 和container")
+	flag.BoolVar(&ServerTest, "serverTest", false, "是否判断设备端的服务是否正常")
 	flag.StringVar(&IpListFile, "ipListFile", "./ip.txt", "存储设备IP的文件")
 	flag.Parse()
 	if GetIp {
@@ -37,6 +56,9 @@ func main() {
 	}
 	if GetDocker {
 		GetImageAndContainer()
+	}
+	if ServerTest {
+		SensorServerTest()
 	}
 }
 
@@ -62,6 +84,15 @@ type Sensor struct {
 	LsReportTime time.Time
 	IsInControl  bool
 	Status       bool
+}
+
+type Container struct {
+	Id      string
+	Image   string
+	Command string
+	Created int64
+	Status  string
+	Names   []string
 }
 
 // 获取网管服务器下挂载的设备IP
@@ -153,7 +184,7 @@ func getDockerImages() {
 
 // 获取设备上正在运行docker container
 func getDockerContainer() {
-	url := "http://" + SensorIp + ":4243/v1.18/images/json"
+	url := "http://" + SensorIp + ":8008/api/container/list"
 	result, err := http.Get(url)
 	if err != nil {
 		fmt.Println(err)
@@ -191,4 +222,41 @@ func getVersion() {
 	}
 	f.Write(body)
 	f.WriteString("\n")
+}
+
+// 查看设备服务是否正常运行
+func SensorServerTest() {
+	url := "http://" + ip + ":8008/api/container/list"
+	result, err := http.Get(url)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer result.Body.Close()
+	body, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	var data []Container
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, ret := range data {
+		name := strings.Trim(ret.Names[0], "/")
+		if strings.Contains(ret.Status, "Up") {
+			// TODO
+		} else if strings.Contains(ret.Status, "Exited") {
+			fmt.Printf("%s : 停止运行", name)
+		} else {
+			fmt.Printf("%s : 其他情况 : %s", name, ret.Status)
+		}
+		Image[name] = false
+	}
+	for key, value := range Image {
+		if value {
+			fmt.Printf("%s : 未运行", key)
+		}
+	}
 }
