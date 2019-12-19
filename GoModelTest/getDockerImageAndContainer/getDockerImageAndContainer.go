@@ -226,7 +226,7 @@ func getVersion() {
 
 // 查看设备服务是否正常运行
 func SensorServerTest() {
-	url := "http://" + ip + ":8008/api/container/list"
+	url := "http://" + SensorIp + ":8008/api/container/list"
 	result, err := http.Get(url)
 	if err != nil {
 		fmt.Println(err)
@@ -248,15 +248,15 @@ func SensorServerTest() {
 		if strings.Contains(ret.Status, "Up") {
 			// TODO
 		} else if strings.Contains(ret.Status, "Exited") {
-			fmt.Printf("%s : 停止运行", name)
+			fmt.Printf("%s : 停止运行\n", name)
 		} else {
-			fmt.Printf("%s : 其他情况 : %s", name, ret.Status)
+			fmt.Printf("%s : 其他情况 : %s\n", name, ret.Status)
 		}
 		Image[name] = false
 	}
 	for key, value := range Image {
 		if value {
-			fmt.Printf("%s : 未运行", key)
+			fmt.Printf("%s : 未运行\n", key)
 		}
 	}
 }
