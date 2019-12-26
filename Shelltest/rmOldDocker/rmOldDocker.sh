@@ -10,6 +10,15 @@ else
     exit
 fi
 
+# 获取设备的升级状态
+DOWNLOAD_STATUS=`etcdctl get /config/global/download`
+UPGRADE_STATUS=`etcdctl get /config/global/upgrade`
+# 判断设备是否处于升级状态
+if [[ ${DOWNLOAD_STATUS}x != "DONEx" ]] || [[ ${UPGRADE_STATUS}x != "DONEx" ]]; then
+    echo sensor is upgrade
+    exit
+fi
+
 # 定义repo和image_ID的字典
 declare -A REPO_IDS
 # 获取设备中所有的image
