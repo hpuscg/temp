@@ -4,7 +4,7 @@ ServerIp="192.168.100.235"
 # 设备的启动脚本运行超限时间
 LimitTime=300
 
-./getDockerImageAndContainer.amd64 -serverIp=${ServerIp} -getIp=true -ipListFile=${IpListFile}
+# ./getDockerImageAndContainer.amd64 -serverIp=${ServerIp} -getIp=true -ipListFile=${IpListFile}
 i=0
 cat ${IpListFile} |while read Ip
 do
@@ -16,6 +16,11 @@ do
     if [ ${Ip}x != ${ip2}x ]; then
         echo "${Ip} ping 不通,请检查!"
         continue
+    fi
+    # 检查设备是否配置了网管服务器
+    server_addr=`./sshrpc.amd64 -ip=${Ip} -p=false -l="etcdctl get /config/global/server_addr"`
+    if [ ${server_addr}x == "x" ]; then
+        echo "${Ip} 未配置网管服务器"
     fi
     # 检查设备的磁盘空间
     dfret=`./sshrpc.amd64 -ip=${Ip} -p=false -l="df | awk 'NR==2{print}'"`
