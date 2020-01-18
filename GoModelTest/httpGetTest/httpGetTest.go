@@ -28,7 +28,24 @@ func main() {
 	// GetSensorId()
 	// GetRealPeopleNum("192.168.19.247")
 	// GetRGBValue()
-	getFromT3()
+	// getFromT3()
+	getPackageVersionFromServer()
+}
+
+func getPackageVersionFromServer() {
+	serverIp := "192.168.100.235"
+	url := "http://" + serverIp + ":8008/api/sensor_version"
+	resp, err := http.Get(url)
+	if err != nil || resp == nil {
+		fmt.Println(err)
+		return
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(data))
 }
 
 func getFromT3() {
