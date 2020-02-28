@@ -19,18 +19,19 @@ import (
 	"bufio"
 	"os"
 	"io"
-	httpS "github.com/deepglint/flowservice/util/http"
 	"net"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"strconv"
 	"path/filepath"
+	"gitlab.deepglint.com/junkaicao/glog"
+	"net/url"
 )
 
 const (
-	DONE = "DONE"
-	ING  = "ING"
-	TOBE = "TOBE"
+	DONE    = "DONE"
+	TOBE    = "TOBE"
+	Timeout = 100
 )
 
 var (
@@ -43,8 +44,11 @@ var (
 		"bumble-bee": true,
 		"adu":        true,
 	}
-	CurSensor SensorInfo
-	Port      int
+	CurSensor  SensorInfo
+	Port       int
+	logDir    string
+	alsoToFile bool
+	logLevel string
 )
 
 type SensorInfo struct {
@@ -58,27 +62,45 @@ type SensorInfo struct {
 func main() {
 	flag.StringVar(&ServerIp, "serverIp", "192.168.100.235", "server addr")
 	flag.StringVar(&IpListFile, "ipListFile", "./ip.txt", "sensor ip list")
+	flag.StringVar(&logDir, "log_dir", "logs", "log dir, default /tmp")
+	flag.BoolVar(&alsoToFile, "alsologtostderr", false, "log to stderr also to log file")
+	flag.StringVar(&logLevel, "log_level", "info", "log level, default info")
 	flag.IntVar(&Port, "port", 22, "ssh port")
 	flag.Parse()
+	// 判断是否已有历史log，如有进行移动
+	timeStamp := time.Now().Unix()
+	stringTimeStamp := strconv.Itoa(int(timeStamp))
+	newLogFileName := filepath.Join(logDir, stringTimeStamp + ".log")
+	fileNameArr := strings.Split(os.Args[0], "/")
+	oldLogFileName := filepath.Join(logDir, fileNameArr[len(fileNameArr)-1]+".log")
+	_, err := os.Stat(oldLogFileName)
+	if err == nil {
+		cmd := exec.Command("mv", oldLogFileName, newLogFileName)
+		cmd.Run()
+	}
+	// 初始化glog配置
+	glog.Config(glog.WithAlsoToStd(alsoToFile), glog.WithFilePath(logDir))
 	// 逐行读取配置文件中的设备IP
 	fi, err := os.Open(IpListFile)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
+		glog.Infof("Error: %s\n", err)
 		return
 	}
 	defer fi.Close()
 
 	br := bufio.NewReader(fi)
-	for {
+	for i := 0; i >= 0; i++ {
 		a, _, c := br.ReadLine()
 		if c == io.EOF {
 			break
 		}
+		glog.Infof("============%d===========", i)
 		SensorIp := string(a)
+		glog.Infoln(SensorIp)
 		// 测试IP是否能ping通
 		err := tryPing(SensorIp)
 		if err != nil {
-			fmt.Printf("%s 网络不通，请检查\n", SensorIp)
+			glog.Infof("%s 网络不通，请检查\n", SensorIp)
 			continue
 		}
 		// 初始化sensor信息
@@ -90,15 +112,15 @@ func main() {
 		out, err := runLiveCommand(dfStr)
 		var dfInt = 100
 		if err != nil {
-			fmt.Println(err)
+			glog.Infoln(err)
 		} else {
 			dfInt, err = strconv.Atoi(strings.Split(out, "%")[0])
 			if err != nil {
-				fmt.Println(err)
+				glog.Infoln(err)
 			}
 		}
 		if dfInt > 85 {
-			fmt.Printf("%s 磁盘使用率为:%d%", SensorIp, dfInt)
+			glog.Infof("%s 磁盘使用率为:%d%", SensorIp, dfInt)
 			continue
 		}
 		// 测试设备启动脚本是否损坏
@@ -106,15 +128,15 @@ func main() {
 		tegraExistStr := "find /usr/bin/ -name tegra_init.sh"
 		tegraSize, err := runLiveCommand(tegraSizeStr)
 		if err != nil {
-			fmt.Println(err)
+			glog.Infoln(err)
 		}
 		tegraExist, err := runLiveCommand(tegraExistStr)
 		if err != nil {
-			fmt.Println(err)
+			glog.Infoln(err)
 		}
 		tegraSizeInt, err := strconv.Atoi(strings.Trim(tegraSize, "\n"))
 		if tegraSizeInt < 1754 || strings.Trim(tegraExist, "\n") == "" {
-			fmt.Printf("%s 设备的启动脚本损坏，请注意！", SensorIp)
+			glog.Infof("%s 设备的启动脚本损坏，现在进行替换，请注意！", SensorIp)
 			// 将data下的启动脚本放置到/usr/bin下
 			mvTegraStr := "cp /data/shell/_usrbin/tegra_init.sh /usr/bin/"
 			runLiveCommand(mvTegraStr)
@@ -124,10 +146,11 @@ func main() {
 		serverAddr, err := runLiveCommand(serverAddrStr)
 		if strings.Trim(serverAddr, "\n") == "" {
 			// 未配置网管服务器
+			glog.Infoln("准备配置网管服务器，下一次下载镜像")
 			NoServerAddr(SensorIp)
 		} else {
 			// 已配置网管服务器
-			fmt.Println(strings.Trim(serverAddr, "\n"))
+			glog.Infoln("已配置网管服务器：", strings.Trim(serverAddr, "\n"))
 			// 检查设备升级脚本，是否需要预升级
 			IsPreUpgrade()
 			// 已配置网管服务器，升级设备
@@ -140,36 +163,39 @@ func main() {
 func PreUpgrade() {
 	copySession, err := copyConnect("root", CurSensor.Ip, 22)
 	if err != nil {
-		fmt.Println("connect sftp fail, ", err)
+		glog.Infoln("connect sftp fail, ", err)
 		return
 	}
 	// copy switch package
 	err = copyFile(copySession, "/data/shell/service/hookshell/", "./switch_package.sh")
 	if err != nil {
-		fmt.Println("Copy switch file to sensor fail :", err)
+		glog.Infoln("Copy switch file to sensor fail :", err)
 		return
 	}
 	// copy download package
 	err = copyFile(copySession, "/data/shell/service/hookshell/", "./download_package.sh")
 	if err != nil {
-		fmt.Println("Copy download file to sensor fail :", err)
+		glog.Infoln("Copy download file to sensor fail :", err)
 		return
 	}
 	// copy load utils
-	err = copyFile(copySession, "/tmp", "./load_libraT_utils.sh")
+	err = copyFile(copySession, "/tmp/", "./load_libraT_utils.sh")
 	if err != nil {
-		fmt.Println("Copy utils file to sensor fail :", err)
+		glog.Infoln("Copy utils file to sensor fail :", err)
 		return
 	}
 	// copy change load
-	err = copyFile(copySession, "/tmp", "./change_reload.sh")
+	err = copyFile(copySession, "/tmp/", "./change_reload.sh")
 	if err != nil {
-		fmt.Println("Copy change file to sensor fail :", err)
+		glog.Infoln("Copy change file to sensor fail :", err)
 		return
 	}
 	// 执行change_reload.sh
 	execChangeStr := "bash /tmp/change_reload.sh"
 	runLiveCommand(execChangeStr)
+	// 给load_libraT_utils.sh添加可执行权限
+	chmodLoadUtilStr := "chmod +x /data/shell/_usrbin/load_libraT_utils.sh"
+	runLiveCommand(chmodLoadUtilStr)
 	// 删除change_reload.sh
 	rmChangeStr := "rm /tmp/change_reload.sh"
 	runLiveCommand(rmChangeStr)
@@ -181,21 +207,21 @@ func IsPreUpgrade() {
 	downLoadPackageSizeStr := "ls /data/shell/service/hookshell/download_package.sh -l |cut -d \" \" -f 5"
 	switchPackageSize, err := runLiveCommand(switchPackageSizeStr)
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
 	downLoadPackageSize, err := runLiveCommand(downLoadPackageSizeStr)
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
 	switchPackageSizeInt, err := strconv.Atoi(strings.Trim(switchPackageSize, "\n"))
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
 	downLoadPackageSizeInt, err := strconv.Atoi(strings.Trim(downLoadPackageSize, "\n"))
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
-	if switchPackageSizeInt != 2220 || downLoadPackageSizeInt != 222 {
+	if switchPackageSizeInt != 2220 || downLoadPackageSizeInt != 1966 {
 		// 设备预升级
 		PreUpgrade()
 	}
@@ -216,7 +242,8 @@ func tryPing(ip string) error {
 
 // 没有配置网管服务器
 func NoServerAddr(ip string) {
-	ok := CheckTimeOfSensor(ip)
+	ok := SetTimeOfSensor(ip)
+	glog.Infoln(ok)
 	if ok {
 		SetServerAddr(ip)
 	}
@@ -229,22 +256,44 @@ type DataSource struct {
 }
 
 // 给设备较时
-func CheckTimeOfSensor(ip string) (ok bool) {
-	url := "http://" + ip + ":8008/api/synctime"
+func SetTimeOfSensor(ip string) (ok bool) {
+	httpUrl := "http://" + ip + ":8008/api/synctime"
 	data := DataSource{
 		Mode: 1,
 		Ntp:  ServerIp,
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
-	_, code, err := httpS.HTTPPost(url, string(jsonData))
+	_, code, err := HttpPost(httpUrl, string(jsonData))
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
 	if code == 200 {
 		ok = true
+		return
+	} else if code == 404 {
+		httpUrl = "http://" + ip + ":8008/api/synctime/update"
+		data := DataSource{
+			Mode: 1,
+			Ntp:  ServerIp,
+		}
+		jsonData, err := json.Marshal(data)
+		if err != nil {
+			glog.Infoln(err)
+		}
+		_, code, err := HttpPost(httpUrl, string(jsonData))
+		if err != nil {
+			glog.Infoln(err)
+		}
+		glog.Infoln(code)
+		if code == 200 {
+			ok = true
+			return
+		} else {
+			glog.Infoln(code)
+		}
 	}
 	return
 }
@@ -253,14 +302,30 @@ func CheckTimeOfSensor(ip string) (ok bool) {
 func SetServerAddr(ip string) {
 	var data = make(map[string]string)
 	data["server_address"] = ServerIp
-	url := "http://" + ip + ":8008/api/server_address"
+	httpUrl := "http://" + ip + ":8008/api/server_address"
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
-	_, _, err = httpS.HTTPPost(url, string(jsonData))
+	_, code, err := HttpPost(httpUrl, string(jsonData))
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
+	}
+	if code == 404 {
+		var data = make(map[string]string)
+		data["server_address"] = ServerIp
+		httpUrl = "http://" + ip + ":8008/api/server_address/update"
+		jsonData, err := json.Marshal(data)
+		if err != nil {
+			glog.Infoln(err)
+		}
+		_, code, err = HttpPost(httpUrl, string(jsonData))
+		if err != nil {
+			glog.Infoln(err)
+		}
+		if code != 200 {
+			glog.Infoln(code)
+		}
 	}
 }
 
@@ -270,7 +335,7 @@ func HaveServerAddr(ip string) {
 	if isOk {
 		GetUpgradeStatus(ip)
 	} else {
-		CheckTimeOfSensor(ip)
+		SetTimeOfSensor(ip)
 	}
 }
 
@@ -287,34 +352,37 @@ type Container struct {
 // 查看设备的vibo2vibo、bumble和adu服务
 func CheckServerOfSensor(ip string) bool {
 	var isOk = true
-	url := "http://" + ip + ":8008/api/container/list"
-	result, err := http.Get(url)
+	httpUrl := "http://" + ip + ":8008/api/container/list"
+	result, err := http.Get(httpUrl)
 	if err != nil {
 		isOk = false
+		return isOk
 	}
 	defer result.Body.Close()
 	body, err := ioutil.ReadAll(result.Body)
 	if err != nil {
 		isOk = false
+		return isOk
 	}
 	var data []Container
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
 	for _, ret := range data {
 		name := strings.Trim(ret.Names[0], "/")
 		if strings.Contains(ret.Status, "Up") {
 			Images[name] = false
 		} else if strings.Contains(ret.Status, "Exited") {
-			fmt.Printf("%s : 停止运行\n", name)
+			glog.Infof("%s : 停止运行\n", name)
 		} else {
-			fmt.Printf("%s : 其他情况 : %s\n", name, ret.Status)
+			glog.Infof("%s : 其他情况 : %s\n", name, ret.Status)
 		}
 	}
 	for _, value := range Images {
 		if value {
 			isOk = false
+			return isOk
 		}
 	}
 	return isOk
@@ -348,15 +416,15 @@ type Sensor struct {
 
 // 获取设备的升级状态，并根据设备状态决定是否进行升级包下载和升级
 func GetUpgradeStatus(ip string) {
-	url := "http://" + ip + ":8008/api/sensorlist"
-	resp, err := http.Get(url)
+	httpUrl := "http://" + ip + ":8008/api/sensorlist"
+	resp, err := http.Get(httpUrl)
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
 	}
 	var data []Sensor
 	json.Unmarshal(body, &data)
@@ -364,22 +432,26 @@ func GetUpgradeStatus(ip string) {
 	DownLoadStatus = sensor.Host.DownloadState
 	UpgradeStatus = sensor.Host.UpgradeState
 	if DownLoadStatus == TOBE {
+		glog.Infoln("设备开始下载镜像，等待下一次升级")
 		GetDownloadBegin(ip)
 	} else if DownLoadStatus == DONE && UpgradeStatus == TOBE {
+		glog.Infoln("设备开始升级")
 		GetUpgradeBegin(ip)
+	} else {
+		glog.Infoln("设备已升级或者处于升级中")
 	}
 }
 
 // 开始下载镜像
 func GetDownloadBegin(ip string) {
-	url := "http://" + ip + ":8008/api/download/package"
-	http.Get(url)
+	httpUrl := "http://" + ip + ":8008/api/download/package"
+	http.Get(httpUrl)
 }
 
 // 开始升级设备
 func GetUpgradeBegin(ip string) {
-	url := "http://" + ip + ":8008/api/switch/package"
-	http.Get(url)
+	httpUrl := "http://" + ip + ":8008/api/switch/package"
+	http.Get(httpUrl)
 }
 
 // connect for exec cmd
@@ -421,7 +493,7 @@ muPfcFzSD/IgeFoWxYrJIk0CBov3ah+14z5YV1JoKIXAlL7V18f7Omaav8/bozOP
 x78MQ06CGEFRcD4LPMITxTDj6zDm1h7iPhG4m2c9Shy0rwpFmFdd
 -----END RSA PRIVATE KEY-----`))
 	if err != nil {
-		fmt.Println("Unable to parse test key :", err)
+		glog.Infoln("Unable to parse test key :", err)
 	}
 	testSingers, _ := ssh.NewSignerFromKey(testPrivateKeys)
 
@@ -483,7 +555,7 @@ muPfcFzSD/IgeFoWxYrJIk0CBov3ah+14z5YV1JoKIXAlL7V18f7Omaav8/bozOP
 x78MQ06CGEFRcD4LPMITxTDj6zDm1h7iPhG4m2c9Shy0rwpFmFdd
 -----END RSA PRIVATE KEY-----`))
 	if err != nil {
-		fmt.Println("Unable to parse test key :", err)
+		glog.Infoln("Unable to parse test key :", err)
 	}
 	testSingers, _ := ssh.NewSignerFromKey(testPrivateKeys)
 	auth = append(auth, ssh.PublicKeys(testSingers))
@@ -510,15 +582,15 @@ func runLiveCommand(cmd string) (log string, err error) {
 	session, err := connect(CurSensor.Username, CurSensor.Ip, CurSensor.Port)
 	if err != nil {
 		info := fmt.Sprintf("connect to %s err : %s", CurSensor.Ip, err)
-		fmt.Println(info)
+		glog.Infoln(info)
 		return "", err
 	}
 	if CurSensor.Prompt {
-		fmt.Println("root:~# ", cmd)
+		glog.Infoln("root:~# ", cmd)
 	}
 	buf, err := session.CombinedOutput(cmd)
 	if err != nil {
-		fmt.Printf("fail for (%s) \n", err)
+		glog.Infof("fail for (%s) \n", err)
 		return "", err
 	}
 	log = string(buf)
@@ -531,23 +603,61 @@ func copyFile(copySession *sftp.Client, destpath string, file string) error {
 	srcFile, err := os.Open(file)
 	if err != nil {
 		info := fmt.Sprintf("open %s failed :%s", file, err)
-		fmt.Println(info)
+		glog.Infoln(info)
 		return err
 	}
 	df := filepath.Base(file)
 	dstFile, err := copySession.Create(destpath + df)
 	if err != nil {
 		info := fmt.Sprintf("create %s failed :%s", file, err)
-		fmt.Println(info)
+		glog.Infoln(info)
 		return err
 	}
 	// defer dstFile.Close()
 	ff, err := ioutil.ReadAll(srcFile)
 	if err != nil {
-		fmt.Println("readall err: ", err)
+		glog.Infoln("readall err: ", err)
 		return err
 	}
 	dstFile.Write(ff)
-	fmt.Printf("copy file (%s) to (%s) successful\n", file, destpath+df)
+	// glog.Infof("copy file (%s) to (%s) successful\n", file, destpath+df)
 	return nil
+}
+
+func HttpPost(urlAddr string, data string) (result []byte, statusCode int, err error) {
+	urlEr := url.URL{}
+	urlProxy, _ := urlEr.Parse(urlAddr)
+	client := &http.Client{
+		Transport: &http.Transport{
+			Dial: func(netW, addr string) (net.Conn, error) {
+				c, err := net.DialTimeout(netW, addr, time.Second*Timeout)
+				if err != nil {
+					return nil, err
+				}
+				c.SetDeadline(time.Now().Add(Timeout * time.Second))
+				return c, nil
+			},
+			Proxy: http.ProxyURL(urlProxy),
+		},
+	}
+	Req, err := http.NewRequest("POST", urlAddr, strings.NewReader(data))
+	if err != nil {
+		statusCode = 400
+		return
+	}
+	//set default content type to json, same as ripple
+	Req.Header.Set("Content-Type", "application/json")
+	Req.Header.Set("Content-Length", fmt.Sprintf("%d", len(data)))
+	response, err := client.Do(Req)
+	if err != nil {
+		return
+	}
+	statusCode = response.StatusCode
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
+	result = body
+	return
 }
