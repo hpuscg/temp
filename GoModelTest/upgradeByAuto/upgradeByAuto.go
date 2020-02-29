@@ -144,7 +144,7 @@ func main() {
 		// 检查设备是否配置了网管服务器
 		serverAddrStr := "etcdctl get /config/global/server_addr"
 		serverAddr, err := runLiveCommand(serverAddrStr)
-		if strings.Trim(serverAddr, "\n") == "" {
+		if strings.Trim(serverAddr, "\n") != ServerIp {
 			// 未配置网管服务器
 			glog.Infoln("准备配置网管服务器，下一次下载镜像")
 			NoServerAddr(SensorIp)
