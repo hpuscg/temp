@@ -287,7 +287,6 @@ func SetTimeOfSensor(ip string) (ok bool) {
 		if err != nil {
 			glog.Infoln(err)
 		}
-		glog.Infoln(code)
 		if code == 200 {
 			ok = true
 			return
