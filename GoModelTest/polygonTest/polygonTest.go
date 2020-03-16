@@ -12,7 +12,22 @@ import (
 )
 
 func main() {
-	polygonInOrOut()
+	// polygonInOrOut()
+	polygonIn()
+}
+
+func polygonIn() {
+	var pg polygon.Polygon
+	pg.Append(polygon.Point{0, 0})
+	pg.Append(polygon.Point{0, 4})
+	pg.Append(polygon.Point{4, 0})
+	pg.Append(polygon.Point{4, 4})
+	pIn := polygon.Point{X: 5, Y: 2}
+	if pg.ContainsPoint(pIn, polygon.OddEvenFill) {
+		fmt.Println("点pIn在多边形区域内")
+	} else {
+		fmt.Println("点pIn不在多边形区域内")
+	}
 }
 
 func polygonInOrOut() {
@@ -39,6 +54,3 @@ func polygonInOrOut() {
 		fmt.Println("点p1Out不在多边形区域内")
 	}
 }
-
-
-
