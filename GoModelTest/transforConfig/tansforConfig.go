@@ -19,8 +19,13 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"gitlab.deepglint.com/junkaicao/glog"
 	"io"
 	"io/ioutil"
@@ -36,33 +41,63 @@ import (
 )
 
 const (
-	ContentType = "application/json"
-	TokenUrl    = ""
-	UserName    = ""
-	PassWord    = ""
+	ContentType     = "application/json"
+	DefaultUserName = "admin"
+	DefaultPassWord = "Dg1304!@"
 )
 
 var (
-	IsSet      bool
-	IpListFile string
-	SensorId   string
-	SensorIp   string
-	FileName   string
-	YamlClient *yaml.YamlConfig = nil
-	LogDir     string
-	AlsoToFile bool
-	LogLevel   string
-	Token      string
+	IsSet          bool
+	IpListFile     string
+	SensorId       string
+	SensorIp       string
+	FileName       string
+	YamlClient     *yaml.YamlConfig = nil
+	LogDir         string
+	AlsoToFile     bool
+	LogLevel       string
+	Token          string
+	TokenUrl       = "http://%s/api/a/login"
+	T1SensorIdUrl  = "http://%s:8008/api/sensorid"
+	T1EventRuleUrl = "http://%s:8008/api/iterate_values?key=/config/eventbrain/alertrule"
+	T1DescUrl      = "http://%s:8008/api/name"
+	T3SensorIdUrl  = "http://%s/api/sensorid"
+	T3DescUrl      = "http://%s/api/name"
+	T3EventRuleUrl = "http://%s/api/f/eventrule"
+	UserName       string
+	PassWord       string
+	AsePassWord    string
+	AesKey         = []byte("t3.deepglint.com")
+	AesIv          = []byte("86-10-62950616-9")
 )
 
 func main() {
-	flag.BoolVar(&IsSet, "isSet", false, "判断程序启动是获取配置还是设置配置，false为获取，true为设置")
+	defer func() {
+		if err := recover(); err != nil {
+			glog.Fatalf("panic err: %s", err)
+			glog.Flush()
+		}
+	}()
+	Run()
+}
+
+func Run() {
+	flag.BoolVar(&IsSet, "isSet", true, "判断程序启动是获取配置还是设置配置，false为获取，true为设置")
 	flag.StringVar(&IpListFile, "configFile", "ipList.txt", "配置文件的路径, default:ipList.txt")
-	// flag.StringVar(&SensorIp, "sensorIp", "192.168.5.251", "配置迁移的设备IP")
+	flag.StringVar(&SensorIp, "sensorIp", "", "配置迁移的设备IP")
+	flag.StringVar(&UserName, "username", "", "设备web登陆用户名")
+	flag.StringVar(&PassWord, "password", "", "设备web登陆的密码")
 	flag.StringVar(&LogDir, "logDir", "log", "log的存放位置")
 	flag.BoolVar(&AlsoToFile, "alsologtostderr", true, "log to stderr also to log file, default:true")
 	flag.StringVar(&LogLevel, "log_level", "info", "log level, default:info")
 	flag.Parse()
+	// 初始化设备登陆用户名密码
+	if UserName == "" {
+		UserName = DefaultUserName
+	}
+	if PassWord == "" {
+		PassWord = DefaultPassWord
+	}
 	// 判断是否已有历史log，如有进行移动
 	timeStamp := time.Now().Unix()
 	stringTimeStamp := strconv.Itoa(int(timeStamp))
@@ -76,22 +111,40 @@ func main() {
 	}
 	// init log config
 	glog.Config(glog.WithAlsoToStd(AlsoToFile), glog.WithFilePath(LogDir), glog.WithLevel(LogLevel))
-	// 逐行读取配置文件中的设备IP
-	fi, err := os.Open(IpListFile)
+	err = EncodePassWord()
 	if err != nil {
-		glog.Infof("Error: %s\n", err)
+		glog.Infoln(err)
 		return
 	}
-	defer fi.Close()
-
-	br := bufio.NewReader(fi)
-	for i := 0; i >= 0; i++ {
-		a, _, c := br.ReadLine()
-		if c == io.EOF {
-			break
+	if SensorIp == "" {
+		// 逐行读取配置文件中的设备IP
+		fi, err := os.Open(IpListFile)
+		if err != nil {
+			glog.Infof("Error: %s\n", err)
+			return
 		}
-		SensorIp = string(a)
-		glog.Infof("=====%d==========%s========", i+1, SensorIp)
+		defer fi.Close()
+
+		br := bufio.NewReader(fi)
+		for i := 0; i >= 0; i++ {
+			a, _, c := br.ReadLine()
+			if c == io.EOF {
+				break
+			}
+			SensorIp = string(a)
+			glog.Infof("============%d============", i+1)
+			err = tryPing(SensorIp)
+			if err != nil {
+				glog.Infof("%s 网络不通，请检查\n", SensorIp)
+				return
+			}
+			if IsSet {
+				SetConfig()
+			} else {
+				GetConfig()
+			}
+		}
+	} else {
 		err = tryPing(SensorIp)
 		if err != nil {
 			glog.Infof("%s 网络不通，请检查\n", SensorIp)
@@ -103,6 +156,34 @@ func main() {
 			GetConfig()
 		}
 	}
+}
+
+func EncodePassWord() error {
+	passWordByte := []byte(PassWord)
+	//获取block块
+	block, err := aes.NewCipher(AesKey)
+	if err != nil {
+		return err
+	}
+	//补码
+	passWordByte = PKCS7Padding(passWordByte, block.BlockSize())
+
+	//创建明文长度的数组
+	crypted := make([]byte, len(passWordByte))
+	//加密模式，
+	blockMode := cipher.NewCBCEncrypter(block, AesIv)
+	//加密明文
+	blockMode.CryptBlocks(crypted, passWordByte)
+	AsePassWord = hex.EncodeToString(crypted)
+	return nil
+}
+
+func PKCS7Padding(origData []byte, blockSize int) []byte {
+	//计算需要补几位数
+	padding := blockSize - len(origData)%blockSize
+	//在切片后面追加char数量的byte(char)
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(origData, padtext...)
 }
 
 // 测试设备IP能否ping通
@@ -128,6 +209,14 @@ type EventRule struct {
 	LowerBound   float64
 }
 
+// json api
+type ResponseData struct {
+	Code     int         `json:"code"`
+	Msg      string      `json:"msg"`
+	Redirect string      `json:"redirect"`
+	Data     interface{} `json:"data"`
+}
+
 // 升级前从T1设备上获取已有配置
 func GetConfig() {
 	SensorId = ""
@@ -137,7 +226,11 @@ func GetConfig() {
 		return
 	}
 	CreateConfigFile()
-	InitYamlClient()
+	err := InitYamlClient()
+	if err != nil {
+		glog.Infoln(err)
+		return
+	}
 	GetSensorConfig()
 }
 
@@ -152,7 +245,7 @@ func GetSensorConfig() {
 	if err != nil {
 		glog.Infoln(err)
 	}
-	url := "http://" + SensorIp + ":8008/api/iterate_values?key=/config/eventbrain/alertrule"
+	url := fmt.Sprintf(T1EventRuleUrl, SensorIp)
 	ret, err := http.Get(url)
 	if err != nil {
 		glog.Infoln(err)
@@ -179,7 +272,7 @@ func GetSensorConfig() {
 	if err != nil {
 		glog.Infoln(err)
 	}
-	descUrl := "http://" + SensorIp + ":8008/api/name"
+	descUrl := fmt.Sprintf(T1DescUrl, SensorIp)
 	descRet, err := http.Get(descUrl)
 	if err != nil {
 		glog.Infoln(err)
@@ -193,15 +286,13 @@ func GetSensorConfig() {
 	if err != nil {
 		glog.Infoln(err)
 	}
+	glog.Infof("======%s====Successful", SensorIp)
 }
 
 // init yaml client
-func InitYamlClient() {
-	var err error
+func InitYamlClient() (err error) {
 	YamlClient, err = yaml.NewYamlConfig(FileName)
-	if err != nil {
-		glog.Infoln(err)
-	}
+	return
 }
 
 // 创建配置文件
@@ -216,7 +307,7 @@ func CreateConfigFile() {
 
 // 获取设备的SensorId
 func GetSensorIdFromT1() {
-	url := "http://" + SensorIp + ":8008/api/sensorid"
+	url := fmt.Sprintf(T1SensorIdUrl, SensorIp)
 	result, err := http.Get(url)
 	if err != nil {
 		glog.Infoln(err)
@@ -235,7 +326,8 @@ func GetSensorIdFromT1() {
 func SetConfig() {
 	// 根据用户名密码获取token
 	Token = ""
-	GetTokenByPostWithPassWord(TokenUrl, UserName, PassWord)
+	TokenUrl = fmt.Sprintf(TokenUrl, SensorIp)
+	GetTokenByPostWithPassWord(TokenUrl, UserName, AsePassWord)
 	if Token == "" {
 		glog.Infoln("get token err")
 		return
@@ -249,7 +341,11 @@ func SetConfig() {
 	}
 	// 根据sensorID读取设备的配置文件，并校验IP；
 	FileName = filepath.Join("config", SensorId+".yaml")
-	InitYamlClient()
+	err := InitYamlClient()
+	if err != nil {
+		glog.Infoln(err)
+		return
+	}
 	ip, err := YamlClient.GetString("Ip")
 	if err != nil || ip != SensorIp {
 		glog.Infof("err is :%+v, get ip is: %s", err, ip)
@@ -265,29 +361,44 @@ func SetSensorConfig() {
 		glog.Infoln("get sensor desc from yaml file err: ", desc)
 		return
 	}
-	// TODO post desc to sensor
-	descUrl := "http://" + SensorIp + "/api/name"
-	_, err = PostWithToken(descUrl, desc, Token, ContentType)
+	descUrl := fmt.Sprintf(T3DescUrl, SensorIp)
+	var descData = make(map[string]string)
+	descData["sensor_desc"] = desc
+	descByte, err := json.Marshal(descData)
 	if err != nil {
 		glog.Infoln(err)
 	}
+	descRet, err := PostWithToken(descUrl, string(descByte), Token, ContentType)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	var descResp ResponseData
+	err = json.Unmarshal(descRet, &descResp)
+	if err != nil || descResp.Code != 0 {
+		glog.Infoln(err)
+		glog.Infoln(descResp.Msg)
+		return
+	}
+
+	/*// TODO post event rule to sensor
 	eventRuleString, err := YamlClient.GetString("EventRule")
 	if err != nil {
 		glog.Infoln("get event rule from yaml file err: ", eventRuleString)
 		return
 	}
-	/*eventRule := make(map[string]EventRule)
-	err = json.Unmarshal([]byte(eventRuleString), &eventRule)
-	if err != nil {
-		glog.Infoln(err)
-	}*/
-	// TODO post event rule to sensor
-	eventRuleUrl := "http://" + SensorIp + "/api/f/eventrule"
+	eventRuleUrl := fmt.Sprintf(T3EventRuleUrl, SensorIp)
 	_, err = PostWithToken(eventRuleUrl, eventRuleString, Token, ContentType)
 	if err != nil {
-		glog.Infoln("get event rule from yaml file err: ", eventRuleString)
-		return
+		glog.Infoln(err)
 	}
+	var eventRuleResp ResponseData
+	err = json.Unmarshal(descRet, &eventRuleResp)
+	if err != nil || eventRuleResp.Code != 0 {
+		glog.Infoln(err)
+		glog.Infoln(eventRuleResp.Msg)
+		return
+	}*/
+	glog.Infof("======%s====Successful", SensorIp)
 }
 
 func PostWithToken(url, data, token, contentType string) (body []byte, err error) {
@@ -314,7 +425,7 @@ func PostWithToken(url, data, token, contentType string) (body []byte, err error
 }
 
 func GetSensorIdFromT3() {
-	url := "http://" + SensorIp + "/api/sensorid"
+	url := fmt.Sprintf(T3SensorIdUrl, SensorIp)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -334,7 +445,12 @@ func GetSensorIdFromT3() {
 		glog.Infoln(err)
 		return
 	}
-	SensorId = string(body)
+	var respSensorId ResponseData
+	err = json.Unmarshal(body, &respSensorId)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	SensorId = respSensorId.Data.(map[string]interface{})["sensor_id"].(string)
 }
 
 // 通过用户名密码获取token
@@ -358,5 +474,10 @@ func GetTokenByPostWithPassWord(url, username, password string) {
 		glog.Infoln(err)
 		return
 	}
-	Token = string(respData)
+	var respToken ResponseData
+	err = json.Unmarshal(respData, &respToken)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	Token = respToken.Data.(map[string]interface{})["token"].(string)
 }
