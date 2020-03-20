@@ -1,0 +1,72 @@
+/*
+#Time      :  2020/3/19 5:53 PM 
+#Author    :  chuangangshen@deepglint.com
+#File      :  aseTest.go
+#Software  :  GoLand
+*/
+package main
+
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"bytes"
+	"fmt"
+)
+
+func main() {
+	//设置是要
+	key := []byte("1234567890123456")
+	//明文
+	origData := []byte("Dg1304!@")
+	//加密
+	en := AESEncrypt(origData, key)
+	fmt.Println(string(en))
+	//解密
+	de := AESDecrypt(en, key)
+	fmt.Println(string(de))
+}
+
+//解密
+func AESDecrypt(crypted, key []byte) []byte {
+	block, _ := aes.NewCipher(key)
+	blockSize := block.BlockSize()
+	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
+	origData := make([]byte, len(crypted))
+	blockMode.CryptBlocks(origData, crypted)
+	origData = PKCS7UnPadding(origData)
+	return origData
+}
+
+//去补码
+func PKCS7UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:length-unpadding]
+}
+
+//加密
+func AESEncrypt(origData, key []byte) []byte {
+	//获取block块
+	block, _ := aes.NewCipher(key)
+	//补码
+	origData = PKCS7Padding(origData, block.BlockSize())
+	//加密模式，
+	blockMode := cipher.NewCBCEncrypter(block, key[:block.BlockSize()])
+
+	//创建明文长度的数组
+	crypted := make([]byte, len(origData))
+
+	//加密明文
+	blockMode.CryptBlocks(crypted, origData)
+
+	return crypted
+}
+
+//补码
+func PKCS7Padding(origData []byte, blockSize int) []byte {
+	//计算需要补几位数
+	padding := blockSize - len(origData)%blockSize
+	//在切片后面追加char数量的byte(char)
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(origData, padtext...)
+}
