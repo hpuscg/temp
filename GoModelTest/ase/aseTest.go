@@ -1,5 +1,5 @@
 /*
-#Time      :  2020/3/19 5:53 PM 
+#Time      :  2020/3/19 5:53 PM
 #Author    :  chuangangshen@deepglint.com
 #File      :  aseTest.go
 #Software  :  GoLand
@@ -7,34 +7,77 @@
 package main
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"bytes"
-	"fmt"
+	"encoding/hex"
+	"flag"
+	"gitlab.deepglint.com/junkaicao/glog"
+	"strings"
+)
+
+const (
+	LogDir     = "log"
+	LogLevel   = "info"
+)
+
+var (
+	aeskey = []byte("t3.deepglint.com")
+	aesiv  = []byte("86-10-62950616-9")
+	ps     = []byte("Dg1304!@")
+	AlsoToFile = true
 )
 
 func main() {
-	//设置是要
-	key := []byte("1234567890123456")
-	//明文
-	origData := []byte("Dg1304!@")
-	//加密
-	en := AESEncrypt(origData, key)
-	fmt.Println(string(en))
-	//解密
-	de := AESDecrypt(en, key)
-	fmt.Println(string(de))
+	flag.BoolVar(&AlsoToFile, "alsoToFile", true, "")
+	flag.Parse()
+	glog.Config(glog.WithAlsoToStd(AlsoToFile), glog.WithFilePath(LogDir), glog.WithLevel(LogLevel))
+	EncodePassWord()
+	// DecodePassWord()
 }
 
-//解密
-func AESDecrypt(crypted, key []byte) []byte {
-	block, _ := aes.NewCipher(key)
+// 加密
+func EncodePassWord() {
+	ciphertext := AESEncrypt(ps, aeskey, aesiv)
+	ret := hex.EncodeToString(ciphertext)
+	glog.Infoln(strings.ToUpper(ret))
+}
+
+// 解密
+func DecodePassWord() {
+	en := "B32FA6018771638F277F0BE418708C10"
+	data, err := hex.DecodeString(en)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	dnData, err := aesCBCDecrypt(data, aeskey, aesiv)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	glog.Infoln(string(dnData))
+}
+
+// 解密
+func aesCBCDecrypt(encryptData, key, iv []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err)
+	}
 	blockSize := block.BlockSize()
-	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
-	origData := make([]byte, len(crypted))
-	blockMode.CryptBlocks(origData, crypted)
-	origData = PKCS7UnPadding(origData)
-	return origData
+	if len(encryptData) < blockSize {
+		panic("ciphertext too short")
+	}
+
+	if len(encryptData)%blockSize != 0 {
+		panic("ciphertext is not a multiple of the block size")
+	}
+
+	mode := cipher.NewCBCDecrypter(block, iv)
+	mode.CryptBlocks(encryptData, encryptData)
+
+	// 解填充
+	encryptData = PKCS7UnPadding(encryptData)
+	return encryptData, nil
 }
 
 //去补码
@@ -45,17 +88,16 @@ func PKCS7UnPadding(origData []byte) []byte {
 }
 
 //加密
-func AESEncrypt(origData, key []byte) []byte {
+func AESEncrypt(origData, key, iv []byte) []byte {
 	//获取block块
 	block, _ := aes.NewCipher(key)
 	//补码
 	origData = PKCS7Padding(origData, block.BlockSize())
-	//加密模式，
-	blockMode := cipher.NewCBCEncrypter(block, key[:block.BlockSize()])
 
 	//创建明文长度的数组
 	crypted := make([]byte, len(origData))
-
+	//加密模式，
+	blockMode := cipher.NewCBCEncrypter(block, iv)
 	//加密明文
 	blockMode.CryptBlocks(crypted, origData)
 
