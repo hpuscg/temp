@@ -133,6 +133,7 @@ func Run() {
 			}
 			SensorIp = string(a)
 			glog.Infof("============%d============", i+1)
+			glog.Infoln(SensorIp)
 			err = tryPing(SensorIp)
 			if err != nil {
 				glog.Infof("%s 网络不通，请检查\n", SensorIp)
@@ -145,6 +146,8 @@ func Run() {
 			}
 		}
 	} else {
+		glog.Infoln("====================")
+		glog.Infoln(SensorIp)
 		err = tryPing(SensorIp)
 		if err != nil {
 			glog.Infof("%s 网络不通，请检查\n", SensorIp)
@@ -158,6 +161,7 @@ func Run() {
 	}
 }
 
+// 对密码进行CBC加密
 func EncodePassWord() error {
 	passWordByte := []byte(PassWord)
 	//获取block块
@@ -380,24 +384,24 @@ func SetSensorConfig() {
 		return
 	}
 
-	/*// TODO post event rule to sensor
+	// post event rule to sensor
 	eventRuleString, err := YamlClient.GetString("EventRule")
 	if err != nil {
 		glog.Infoln("get event rule from yaml file err: ", eventRuleString)
 		return
 	}
 	eventRuleUrl := fmt.Sprintf(T3EventRuleUrl, SensorIp)
-	_, err = PostWithToken(eventRuleUrl, eventRuleString, Token, ContentType)
+	eventRuleRet, err := PostWithToken(eventRuleUrl, eventRuleString, Token, ContentType)
 	if err != nil {
 		glog.Infoln(err)
 	}
 	var eventRuleResp ResponseData
-	err = json.Unmarshal(descRet, &eventRuleResp)
+	err = json.Unmarshal(eventRuleRet, &eventRuleResp)
 	if err != nil || eventRuleResp.Code != 0 {
 		glog.Infoln(err)
 		glog.Infoln(eventRuleResp.Msg)
 		return
-	}*/
+	}
 	glog.Infof("======%s====Successful", SensorIp)
 }
 
