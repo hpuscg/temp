@@ -1,5 +1,5 @@
 /*
-#Time      :  2020/1/14 2:59 PM 
+#Time      :  2020/1/14 2:59 PM
 #Author    :  chuangangshen@deepglint.com
 #File      :  upgradeByAuto.go
 #Software  :  GoLand
@@ -7,25 +7,25 @@
 package main
 
 import (
-	"flag"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"strings"
-	"net/http"
-	"time"
-	"os/exec"
-	"runtime"
 	"bufio"
-	"os"
-	"io"
-	"net"
+	"encoding/json"
+	"flag"
+	"fmt"
 	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
-	"strconv"
-	"path/filepath"
 	"gitlab.deepglint.com/junkaicao/glog"
+	"golang.org/x/crypto/ssh"
+	"io"
+	"io/ioutil"
+	"net"
+	"net/http"
 	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
 )
 
 const (
@@ -46,9 +46,10 @@ var (
 	}
 	CurSensor  SensorInfo
 	Port       int
-	logDir    string
+	logDir     string
 	alsoToFile bool
-	logLevel string
+	logLevel   string
+	NtpServer  string
 )
 
 type SensorInfo struct {
@@ -66,17 +67,18 @@ func main() {
 	flag.BoolVar(&alsoToFile, "alsologtostderr", false, "log to stderr also to log file")
 	flag.StringVar(&logLevel, "log_level", "info", "log level, default info")
 	flag.IntVar(&Port, "port", 22, "ssh port")
+	flag.StringVar(&NtpServer, "ntpServer", "192.168.100.235", "ntp server")
 	flag.Parse()
 	// 判断是否已有历史log，如有进行移动
 	timeStamp := time.Now().Unix()
 	stringTimeStamp := strconv.Itoa(int(timeStamp))
-	newLogFileName := filepath.Join(logDir, stringTimeStamp + ".log")
+	newLogFileName := filepath.Join(logDir, stringTimeStamp+".log")
 	fileNameArr := strings.Split(os.Args[0], "/")
 	oldLogFileName := filepath.Join(logDir, fileNameArr[len(fileNameArr)-1]+".log")
 	_, err := os.Stat(oldLogFileName)
 	if err == nil {
 		cmd := exec.Command("mv", oldLogFileName, newLogFileName)
-		cmd.Run()
+		_ = cmd.Run()
 	}
 	// 初始化glog配置
 	glog.Config(glog.WithAlsoToStd(alsoToFile), glog.WithFilePath(logDir))
@@ -120,7 +122,8 @@ func main() {
 			}
 		}
 		if dfInt > 85 {
-			glog.Infof("%s 磁盘使用率为:%d%", SensorIp, dfInt)
+			glog.Infof("%s 磁盘使用率为:%d%，开始清理log日志", SensorIp, dfInt)
+
 			continue
 		}
 		// 测试设备启动脚本是否损坏
@@ -139,7 +142,7 @@ func main() {
 			glog.Infof("%s 设备的启动脚本损坏，现在进行替换，请注意！", SensorIp)
 			// 将data下的启动脚本放置到/usr/bin下
 			mvTegraStr := "cp /data/shell/_usrbin/tegra_init.sh /usr/bin/"
-			runLiveCommand(mvTegraStr)
+			_, _ = runLiveCommand(mvTegraStr)
 		}
 		// 检查设备是否配置了网管服务器
 		serverAddrStr := "etcdctl get /config/global/server_addr"
@@ -156,6 +159,40 @@ func main() {
 			// 已配置网管服务器，升级设备
 			HaveServerAddr(SensorIp)
 		}
+	}
+}
+
+// 清理log日志
+func RmDockerLog() {
+	// 删除root下的tar文件
+	rmTar := "rm -rf /root/*.tar.gz'"
+	_, err := runLiveCommand(rmTar)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	// 删除上传图片脚本
+	rmPicture := "rm /usr/bin/postpicture"
+	_, err = runLiveCommand(rmPicture)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	// 删除docker log
+	rmDockerLog := "cd /var/lib/docker/containers && rm -rf `find ./ -name *json.log`"
+	_, err = runLiveCommand(rmDockerLog)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	// 删除libra log
+	rmLibraLog := "cd /libra/logs &&  rm -rf Libra.muxerlab.tegra-ubuntu*"
+	_, err = runLiveCommand(rmLibraLog)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	// 删除bumble log
+	rmBumbleLog := "cd /var/lib/docker/aufs/diff &&  rm -rf `find ./ -name *T00:00:00Z`"
+	_, err = runLiveCommand(rmBumbleLog)
+	if err != nil {
+		glog.Infoln(err)
 	}
 }
 
@@ -192,13 +229,13 @@ func PreUpgrade() {
 	}
 	// 执行change_reload.sh
 	execChangeStr := "bash /tmp/change_reload.sh"
-	runLiveCommand(execChangeStr)
+	_, _ = runLiveCommand(execChangeStr)
 	// 给load_libraT_utils.sh添加可执行权限
 	chmodLoadUtilStr := "chmod +x /data/shell/_usrbin/load_libraT_utils.sh"
-	runLiveCommand(chmodLoadUtilStr)
+	_, _ = runLiveCommand(chmodLoadUtilStr)
 	// 删除change_reload.sh
 	rmChangeStr := "rm /tmp/change_reload.sh"
-	runLiveCommand(rmChangeStr)
+	_, _ = runLiveCommand(rmChangeStr)
 }
 
 // 判读设备是否需要预升级
@@ -260,7 +297,7 @@ func SetTimeOfSensor(ip string) (ok bool) {
 	httpUrl := "http://" + ip + ":8008/api/synctime"
 	data := DataSource{
 		Mode: 1,
-		Ntp:  ServerIp,
+		Ntp:  NtpServer,
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -277,7 +314,7 @@ func SetTimeOfSensor(ip string) (ok bool) {
 		httpUrl = "http://" + ip + ":8008/api/synctime/update"
 		data := DataSource{
 			Mode: 1,
-			Ntp:  ServerIp,
+			Ntp:  NtpServer,
 		}
 		jsonData, err := json.Marshal(data)
 		if err != nil {
@@ -293,6 +330,8 @@ func SetTimeOfSensor(ip string) (ok bool) {
 		} else {
 			glog.Infoln(code)
 		}
+	} else {
+		glog.Infoln(code)
 	}
 	return
 }
@@ -426,7 +465,7 @@ func GetUpgradeStatus(ip string) {
 		glog.Infoln(err)
 	}
 	var data []Sensor
-	json.Unmarshal(body, &data)
+	_ = json.Unmarshal(body, &data)
 	sensor := data[0]
 	DownLoadStatus = sensor.Host.DownloadState
 	UpgradeStatus = sensor.Host.UpgradeState
@@ -444,13 +483,13 @@ func GetUpgradeStatus(ip string) {
 // 开始下载镜像
 func GetDownloadBegin(ip string) {
 	httpUrl := "http://" + ip + ":8008/api/download/package"
-	http.Get(httpUrl)
+	_, _ = http.Get(httpUrl)
 }
 
 // 开始升级设备
 func GetUpgradeBegin(ip string) {
 	httpUrl := "http://" + ip + ":8008/api/switch/package"
-	http.Get(httpUrl)
+	_, _ = http.Get(httpUrl)
 }
 
 // connect for exec cmd
@@ -593,7 +632,7 @@ func runLiveCommand(cmd string) (log string, err error) {
 		return "", err
 	}
 	log = string(buf)
-	session.Close()
+	_ = session.Close()
 	return log, nil
 }
 
@@ -618,7 +657,7 @@ func copyFile(copySession *sftp.Client, destpath string, file string) error {
 		glog.Infoln("readall err: ", err)
 		return err
 	}
-	dstFile.Write(ff)
+	_, _ = dstFile.Write(ff)
 	// glog.Infof("copy file (%s) to (%s) successful\n", file, destpath+df)
 	return nil
 }
@@ -633,13 +672,14 @@ func HttpPost(urlAddr string, data string) (result []byte, statusCode int, err e
 				if err != nil {
 					return nil, err
 				}
-				c.SetDeadline(time.Now().Add(Timeout * time.Second))
+				_ = c.SetDeadline(time.Now().Add(Timeout * time.Second))
 				return c, nil
 			},
 			Proxy: http.ProxyURL(urlProxy),
 		},
 	}
 	Req, err := http.NewRequest("POST", urlAddr, strings.NewReader(data))
+	Req.Close = true
 	if err != nil {
 		statusCode = 400
 		return
