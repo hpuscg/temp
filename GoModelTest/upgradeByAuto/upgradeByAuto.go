@@ -123,7 +123,7 @@ func main() {
 		}
 		if dfInt > 85 {
 			glog.Infof("%s 磁盘使用率为:%d%，开始清理log日志", SensorIp, dfInt)
-
+			RmDockerLog()
 			continue
 		}
 		// 测试设备启动脚本是否损坏
@@ -191,6 +191,18 @@ func RmDockerLog() {
 	// 删除bumble log
 	rmBumbleLog := "cd /var/lib/docker/aufs/diff &&  rm -rf `find ./ -name *T00:00:00Z`"
 	_, err = runLiveCommand(rmBumbleLog)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	// 拷贝tegra init文件
+	cpTegra := "cp /data/shell/_usrbin/tegra_init.sh /usr/bin/tegra_init.sh"
+	_, err = runLiveCommand(cpTegra)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	// 重启设备
+	rebootStr := "reboot"
+	_, err = runLiveCommand(rebootStr)
 	if err != nil {
 		glog.Infoln(err)
 	}
@@ -374,6 +386,12 @@ func HaveServerAddr(ip string) {
 		GetUpgradeStatus(ip)
 	} else {
 		SetTimeOfSensor(ip)
+		// 重启设备
+		rebootStr := "reboot"
+		_, err := runLiveCommand(rebootStr)
+		if err != nil {
+			glog.Infoln(err)
+		}
 	}
 }
 
