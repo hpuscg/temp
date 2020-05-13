@@ -1,0 +1,8 @@
+2020-05-13T12:31:29.363+0800	info	checkTK1BySensorStatus/checkTk1.go:78	***********************1***********************
+2020-05-13T12:31:29.363+0800	info	checkTK1BySensorStatus/checkTk1.go:80	serverIp:192.168.100.235
+2020-05-13T12:31:29.385+0800	info	checkTK1BySensorStatus/checkTk1.go:174	============1-1===========
+2020-05-13T12:31:40.400+0800	info	checkTK1BySensorStatus/checkTk1.go:180	设备192.168.101.177 网络不通，请检查
+2020-05-13T12:31:40.402+0800	info	checkTK1BySensorStatus/checkTk1.go:174	============1-2===========
+2020-05-13T12:31:40.413+0800	info	checkTK1BySensorStatus/checkTk1.go:112	设备运行正常{Usb:0 Disk:0 TfCard:1 LocalNetwork:-1 RemoteNetwork:-1 Memory:0 Service:0}
+2020-05-13T12:31:40.414+0800	info	checkTK1BySensorStatus/checkTk1.go:174	============1-3===========
+2020-05-13T12:31:40.424+0800	info	checkTK1BySensorStatus/checkTk1.go:112	设备运行正常{Usb:0 Disk:0 TfCard:1 LocalNetwork:-1 RemoteNetwork:0 Memory:0 Service:0}

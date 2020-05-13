@@ -110,40 +110,22 @@ func main() {
 		CurSensor.Port = Port
 		CurSensor.Username = "root"
 		// 检查设备的磁盘空间
-		dfStr := "df | awk 'NR==2{print}'|awk '{print $5}'"
-		out, err := runLiveCommand(dfStr)
-		var dfInt = 100
-		if err != nil {
-			glog.Infoln(err)
-		} else {
-			dfInt, err = strconv.Atoi(strings.Split(out, "%")[0])
-			if err != nil {
-				glog.Infoln(err)
-			}
-		}
+		dfInt, _ := CheckDfInfo()
 		if dfInt > 85 {
 			glog.Infof("%s 磁盘使用率为:%d%，开始清理log日志", SensorIp, dfInt)
 			RmDockerLog()
+			reDfInt, _ := CheckDfInfo()
+			glog.Infof("清理log日志后，%s 磁盘使用率为:%d%", SensorIp, reDfInt)
+			// 重启设备
+			rebootStr := "reboot"
+			_, err = runLiveCommand(rebootStr)
+			if err != nil {
+				glog.Infoln(err)
+			}
 			continue
 		}
 		// 测试设备启动脚本是否损坏
-		tegraSizeStr := "ls /usr/bin/tegra_init.sh -l |cut -d \" \" -f 5"
-		tegraExistStr := "find /usr/bin/ -name tegra_init.sh"
-		tegraSize, err := runLiveCommand(tegraSizeStr)
-		if err != nil {
-			glog.Infoln(err)
-		}
-		tegraExist, err := runLiveCommand(tegraExistStr)
-		if err != nil {
-			glog.Infoln(err)
-		}
-		tegraSizeInt, err := strconv.Atoi(strings.Trim(tegraSize, "\n"))
-		if tegraSizeInt < 1754 || strings.Trim(tegraExist, "\n") == "" {
-			glog.Infof("%s 设备的启动脚本损坏，现在进行替换，请注意！", SensorIp)
-			// 将data下的启动脚本放置到/usr/bin下
-			mvTegraStr := "cp /data/shell/_usrbin/tegra_init.sh /usr/bin/"
-			_, _ = runLiveCommand(mvTegraStr)
-		}
+		CheckTegra()
 		// 检查设备是否配置了网管服务器
 		serverAddrStr := "etcdctl get /config/global/server_addr"
 		serverAddr, err := runLiveCommand(serverAddrStr)
@@ -160,6 +142,44 @@ func main() {
 			HaveServerAddr(SensorIp)
 		}
 	}
+}
+
+// 检测启动脚本是否损坏
+func CheckTegra() {
+	tegraSizeStr := "ls /usr/bin/tegra_init.sh -l |cut -d \" \" -f 5"
+	tegraExistStr := "find /usr/bin/ -name tegra_init.sh"
+	tegraSize, err := runLiveCommand(tegraSizeStr)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	tegraExist, err := runLiveCommand(tegraExistStr)
+	if err != nil {
+		glog.Infoln(err)
+	}
+	tegraSizeInt, err := strconv.Atoi(strings.Trim(tegraSize, "\n"))
+	if tegraSizeInt < 1754 || strings.Trim(tegraExist, "\n") == "" {
+		glog.Infof("%s 设备的启动脚本损坏，现在进行替换，请注意！", CurSensor.Ip)
+		// 将data下的启动脚本放置到/usr/bin下
+		mvTegraStr := "cp /data/shell/_usrbin/tegra_init.sh /usr/bin/"
+		_, _ = runLiveCommand(mvTegraStr)
+	}
+}
+
+// 检查磁盘空间
+func CheckDfInfo() (dfInt int, err error) {
+	dfStr := "df | awk 'NR==2{print}'|awk '{print $5}'"
+	var out string
+	out, err = runLiveCommand(dfStr)
+	dfInt = 100
+	if err != nil {
+		glog.Infoln(err)
+	} else {
+		dfInt, err = strconv.Atoi(strings.Split(out, "%")[0])
+		if err != nil {
+			glog.Infoln(err)
+		}
+	}
+	return
 }
 
 // 清理log日志
@@ -197,12 +217,6 @@ func RmDockerLog() {
 	// 拷贝tegra init文件
 	cpTegra := "cp /data/shell/_usrbin/tegra_init.sh /usr/bin/tegra_init.sh"
 	_, err = runLiveCommand(cpTegra)
-	if err != nil {
-		glog.Infoln(err)
-	}
-	// 重启设备
-	rebootStr := "reboot"
-	_, err = runLiveCommand(rebootStr)
 	if err != nil {
 		glog.Infoln(err)
 	}
