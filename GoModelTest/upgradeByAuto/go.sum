@@ -27,6 +27,8 @@ gitlab.deepglint.com/junkaicao/glog v0.0.0-20191231100529-39ade8a167f6 h1:NQS+w7
 gitlab.deepglint.com/junkaicao/glog v0.0.0-20191231100529-39ade8a167f6/go.mod h1:0TUBM9qS+7Vg5j6z+9Hk9Jq1Wzl568wuyoGSoU5SQBk=
 gitlab.deepglint.com/junkaicao/glog v0.0.0-20200421021811-f2ea6cbd6387 h1:pOtxQfz5buS5Aa+qAqQanYlD78WK1ykTdaZa0o6E63Q=
 gitlab.deepglint.com/junkaicao/glog v0.0.0-20200421021811-f2ea6cbd6387/go.mod h1:0TUBM9qS+7Vg5j6z+9Hk9Jq1Wzl568wuyoGSoU5SQBk=
+gitlab.deepglint.com/junkaicao/glog v0.0.0-20200424072246-b0fce7ef62ea h1:SmL4udINfP6cNjvyTkhp2cvVYafOtuuaOisOaek4piU=
+gitlab.deepglint.com/junkaicao/glog v0.0.0-20200424072246-b0fce7ef62ea/go.mod h1:0TUBM9qS+7Vg5j6z+9Hk9Jq1Wzl568wuyoGSoU5SQBk=
 go.uber.org/atomic v1.5.0 h1:OI5t8sDa1Or+q8AeE+yKeB/SDYioSHAgcVljj9JIETY=
 go.uber.org/atomic v1.5.0/go.mod h1:sABNBOSYdrvTF6hTgEIbc7YasKWGhgEQZyfxyTvoXHQ=
 go.uber.org/multierr v1.3.0 h1:sFPn2GLc3poCkfrpIXGhBD2X0CMIo4Q/zSULXrj/+uc=

@@ -1,8 +1,11 @@
-2020-05-13T12:31:29.363+0800	info	checkTK1BySensorStatus/checkTk1.go:78	***********************1***********************
-2020-05-13T12:31:29.363+0800	info	checkTK1BySensorStatus/checkTk1.go:80	serverIp:192.168.100.235
-2020-05-13T12:31:29.385+0800	info	checkTK1BySensorStatus/checkTk1.go:174	============1-1===========
-2020-05-13T12:31:40.400+0800	info	checkTK1BySensorStatus/checkTk1.go:180	设备192.168.101.177 网络不通，请检查
-2020-05-13T12:31:40.402+0800	info	checkTK1BySensorStatus/checkTk1.go:174	============1-2===========
-2020-05-13T12:31:40.413+0800	info	checkTK1BySensorStatus/checkTk1.go:112	设备运行正常{Usb:0 Disk:0 TfCard:1 LocalNetwork:-1 RemoteNetwork:-1 Memory:0 Service:0}
-2020-05-13T12:31:40.414+0800	info	checkTK1BySensorStatus/checkTk1.go:174	============1-3===========
-2020-05-13T12:31:40.424+0800	info	checkTK1BySensorStatus/checkTk1.go:112	设备运行正常{Usb:0 Disk:0 TfCard:1 LocalNetwork:-1 RemoteNetwork:0 Memory:0 Service:0}
+2020-05-15T11:46:27.637+0800	info	checkTK1BySensorStatus/checkTk1.go:79	***********************1***********************
+2020-05-15T11:46:27.638+0800	info	checkTK1BySensorStatus/checkTk1.go:81	serverIp:192.168.100.235
+2020-05-15T11:46:27.656+0800	info	checkTK1BySensorStatus/checkTk1.go:176	============1===========
+2020-05-15T11:46:38.670+0800	info	checkTK1BySensorStatus/checkTk1.go:183	设备192.168.101.177 网络不通，请检查
+2020-05-15T11:46:38.670+0800	info	checkTK1BySensorStatus/checkTk1.go:176	============2===========
+2020-05-15T11:46:38.682+0800	info	checkTK1BySensorStatus/checkTk1.go:112	192.168.19.247正常:{Usb:0 Disk:0 TfCard:1 LocalNetwork:-1 RemoteNetwork:0 Memory:0 Service:0}
+2020-05-15T11:46:38.682+0800	info	checkTK1BySensorStatus/checkTk1.go:176	============3===========
+2020-05-15T11:46:38.694+0800	info	checkTK1BySensorStatus/checkTk1.go:112	192.168.5.250正常:{Usb:0 Disk:0 TfCard:1 LocalNetwork:-1 RemoteNetwork:-1 Memory:0 Service:0}
+2020-05-15T11:46:38.694+0800	info	checkTK1BySensorStatus/checkTk1.go:176	============4===========
+2020-05-15T11:46:38.710+0800	info	checkTK1BySensorStatus/checkTk1.go:112	192.168.5.251正常:{Usb:0 Disk:0 TfCard:0 LocalNetwork:-1 RemoteNetwork:0 Memory:0 Service:0}
+2020-05-15T11:46:38.711+0800	info	checkTK1BySensorStatus/checkTk1.go:90	map[192.168.100.235:map[192.168.101.177:false 192.168.19.247:true 192.168.5.250:false 192.168.5.251:true]]

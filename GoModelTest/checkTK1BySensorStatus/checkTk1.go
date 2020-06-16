@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -30,6 +29,8 @@ var (
 	alsoToFile bool
 	logLevel   string
 	serverIp   string
+	count      int
+	serverInfo = make(map[string]interface{})
 )
 
 type SensorStatus struct {
@@ -53,8 +54,8 @@ func main() {
 	timeStamp := time.Now().Unix()
 	stringTimeStamp := strconv.Itoa(int(timeStamp))
 	newLogFileName := filepath.Join(logDir, stringTimeStamp+".log")
-	fileNameArr := strings.Split(os.Args[0], "/")
-	oldLogFileName := filepath.Join(logDir, fileNameArr[len(fileNameArr)-1]+".log")
+	_, fileName := filepath.Split(os.Args[0])
+	oldLogFileName := filepath.Join(logDir, fileName+".log")
 	_, err := os.Stat(oldLogFileName)
 	if err == nil {
 		cmd := exec.Command("mv", oldLogFileName, newLogFileName)
@@ -84,9 +85,9 @@ func main() {
 			glog.Infof("网管服务器%s 网络不通，请检查", serverIp)
 			continue
 		}
-		// GetSensorStatus(SensorIp)
-		GetSensorList(i)
+		GetSensorList()
 	}
+	glog.Infoln(serverInfo)
 }
 
 // 获取sensor status
@@ -107,7 +108,6 @@ func GetSensorStatus(ip string) {
 	if err != nil {
 		glog.Infoln(err)
 	} else {
-		// glog.Infof("%+v", sS)
 		if sS.Disk == 0 && sS.Memory == 0 && sS.Service == 0 && sS.Usb == 0 {
 			glog.Infof("%s正常:%+v", ip, sS)
 		} else {
@@ -156,7 +156,7 @@ type Sensor struct {
 }
 
 // 获取网管服务器上挂载的sensor信息
-func GetSensorList(i int) {
+func GetSensorList() {
 	url := "http://" + serverIp + ":8008/api/sensor_list"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -169,12 +169,15 @@ func GetSensorList(i int) {
 	}
 	var data []Sensor
 	_ = json.Unmarshal(body, &data)
-	for j, sensor := range data {
-		// glog.Infof("%+v", sensor)
-		glog.Infof("============%d-%d===========", i+1, j+1)
+	sensorInfo := make(map[string]bool)
+	for _, sensor := range data {
 		if sensor.Host.Version == "V2.15.200119A" {
+			count++
+			glog.Infof("============%d===========", count)
 			// 测试IP是否能ping通
 			sensorIp := sensor.Host.HostIp
+			sensorInfo[sensorIp] = sensor.IsInControl
+			serverInfo[serverIp] = sensorInfo
 			err := tryPing(sensorIp)
 			if err != nil {
 				glog.Infof("设备%s 网络不通，请检查", sensorIp)

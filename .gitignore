@@ -2,3 +2,4 @@
 *.txt
 *.amd64
 *upgradeByAuto
+*.log

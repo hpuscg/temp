@@ -77,8 +77,8 @@ do
     for REPO_KEY in $(echo ${!REPO_IDS[*]})
     do
         # 判断docker image是否是当前运行的docker
-        if [[ ${REPO_KEY} =~ ${ETCD_IMAGE_NAME} ]] && [[ ${REPO_KEY} != *${IMAGE_USE_NAME_TAG} ]]; then
-            # 删除不是当前运行的docker
+        if [[ ${REPO_KEY} =~ ${ETCD_IMAGE_NAME} ]] && [[ ${REPO_KEY} != *${IMAGE_USE_NAME_TAG} ]] && [[ ${REPO_KEY} != *${IMAGE_USE_VERSION} ]]; then
+            # 删除不是当前运行的docker以及不是etcd记录使用的docker
             sudo docker rmi -f ${REPO_IDS[$REPO_KEY]}
         fi
     done

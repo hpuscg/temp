@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -51,8 +50,8 @@ func main() {
 	timeStamp := time.Now().Unix()
 	stringTimeStamp := strconv.Itoa(int(timeStamp))
 	newLogFileName := filepath.Join(logDir, stringTimeStamp+".log")
-	fileNameArr := strings.Split(os.Args[0], "/")
-	oldLogFileName := filepath.Join(logDir, fileNameArr[len(fileNameArr)-1]+".log")
+	_, fileName := filepath.Split(os.Args[0])
+	oldLogFileName := filepath.Join(logDir, fileName+".log")
 	_, err := os.Stat(oldLogFileName)
 	if err == nil {
 		cmd := exec.Command("mv", oldLogFileName, newLogFileName)
