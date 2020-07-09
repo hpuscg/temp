@@ -7,16 +7,28 @@
 package main
 
 import (
-	"github.com/button-chen/polygon"
 	"fmt"
+	"github.com/deepglint/flowservice/datamodel"
 )
 
 func main() {
 	// polygonInOrOut()
-	polygonIn()
+	//polygonIn()
+	pathTest()
 }
 
-func polygonIn() {
+func pathTest() {
+	pathSlice := []int{
+		-551, 2864, 1032, -545, 2834, 1029, -537, 2798, 1029, -531, 2765, 1032,
+		-526, 2740, 1040, -523, 2722, 1050, -521, 2710, 1060, -520, 2706, 1068,
+		-521, 2709, 1069, -523, 2719, 1059, -527, 2757, 1042, -532, 2872, 1030,
+		-549, 3036, 1050, -565, 3028, 1104, -522, 2665, 1113}
+	for i := 1; i < len(pathSlice)/3; i++ {
+		fmt.Println(datamodel.Trajectory(pathSlice[i*3:(i+1)*3]).Distance2D(pathSlice[(i-1)*3:i*3]) )
+	}
+}
+
+/*func polygonIn() {
 	var pg polygon.Polygon
 	pg.Append(polygon.Point{0, 0})
 	pg.Append(polygon.Point{0, 4})
@@ -53,4 +65,4 @@ func polygonInOrOut() {
 	} else {
 		fmt.Println("点p1Out不在多边形区域内")
 	}
-}
+}*/

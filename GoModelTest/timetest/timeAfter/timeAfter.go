@@ -16,7 +16,16 @@ func main() {
 	<-tc
 	fmt.Println("close")
 	time.Now().UTC()*/
-	timeTest()
+	// timeTest()
+	NanoTimeTest()
+}
+
+func NanoTimeTest() {
+	t1 := time.Now().UnixNano()
+	time.Sleep(1 * time.Second)
+	t2 := time.Now().UnixNano()
+	fmt.Println(t2-t1)
+	fmt.Println((t2-t1)/1e9)
 }
 
 func timeTest() {

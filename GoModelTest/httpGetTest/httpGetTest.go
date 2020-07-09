@@ -7,29 +7,27 @@
 package main
 
 import (
-	"fmt"
-	"strings"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	httpS "github.com/deepglint/flowservice/util/http"
-	"flag"
-	"github.com/deepglint/flowservice/models"
+	"strings"
 )
 
 func main() {
 	var ip string
-	flag.StringVar(&ip, "ip", "192.168.5.178:8888", "event server ip")
+	flag.StringVar(&ip, "ip", "192.168.101.8:8888", "event server ip")
 	flag.Parse()
 	// t := Teacher{}
 	// t.ShowA()
-	// getToken(ip)
+	getToken(ip)
 	// PostEvent(ip)
 	// GetSensorId()
 	// GetRealPeopleNum("192.168.19.247")
 	// GetRGBValue()
 	// getFromT3()
-	getPackageVersionFromServer()
+	// getPackageVersionFromServer()
 }
 
 func getPackageVersionFromServer() {
@@ -48,7 +46,7 @@ func getPackageVersionFromServer() {
 	fmt.Println(string(data))
 }
 
-func getFromT3() {
+/*func getFromT3() {
 	baseUrl := "http://192.168.100.170/api/l/CapsuleConfig"
 	// url := strings.Replace(baseUrl, "IP", ip, -1)
 	result, err := httpS.GetWithToken(baseUrl, models.LibraToke, "application/json")
@@ -70,7 +68,7 @@ func getFromT3() {
 	case map[string]interface{}:
 		fmt.Printf("%+v\n", ret.Data.(map[string]interface{}))
 	}
-}
+}*/
 
 
 /*func main() {
@@ -113,7 +111,7 @@ func (t *Teacher) ShowB() {
 	fmt.Println("teacher showB")
 }
 
-func GetRGBValue() {
+/*func GetRGBValue() {
 	url := "http://192.168.5.251:8008/api/rgb/current"
 	result, err := httpS.HTTPGet(url)
 	if err != nil {
@@ -133,7 +131,7 @@ func GetRealPeopleNum(ip string) {
 
 	}
 	fmt.Println(string(result))
-}
+}*/
 
 func GetSensorId() {
 	url := "http://192.168.100.223:8008/api/sensorid"

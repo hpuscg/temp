@@ -21,7 +21,14 @@ func main() {
 	// stringSplit()
 	// preTest()
 	// stringToIntTest()
-	FilePathJoinTest()
+	// FilePathJoinTest()
+	intTest()
+}
+
+func intTest() {
+	a := 1
+	b := 2
+	fmt.Println(float64(a)/float64(b))
 }
 
 func FilePathJoinTest() {
