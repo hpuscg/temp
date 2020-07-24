@@ -17,7 +17,8 @@ func main() {
 	fmt.Println("close")
 	time.Now().UTC()*/
 	// timeTest()
-	NanoTimeTest()
+	//NanoTimeTest()
+	fmt.Println(time.Now().Unix())
 }
 
 func NanoTimeTest() {
