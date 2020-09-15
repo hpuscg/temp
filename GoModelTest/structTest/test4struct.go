@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 )
 
 type Pl struct {
-	weight int
-	high int
+	Weight int
+	High   int
 }
 
 func structTest() {
@@ -35,15 +35,17 @@ func initMap() {
 	}
 }
 
-func struct2map()  {
+func struct2map() {
 	p := Pl{
-		weight:12,
-		high:24,
+		Weight: 12,
+		High:   24,
 	}
-	data, _:= json.Marshal(p)
-	tmp := make(map[string]int)
+	data, _ := json.Marshal(p)
+	fmt.Println(data, p)
+	fmt.Printf("%s", string(data))
+	/*tmp := make(map[string]int)
 	json.Unmarshal(data, &tmp)
-	fmt.Println(tmp["weight"])
+	fmt.Println(tmp["weight"])*/
 }
 
 func main() {

@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -18,6 +21,17 @@ func main() {
 	time.Now().UTC()*/
 	// timeTest()
 	//NanoTimeTest()
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	t := time.NewTicker(1 * time.Second)
+	for {
+		select {
+		case <-sigChan:
+			fmt.Println("single")
+		case <-t.C:
+			fmt.Println("yes")
+		}
+	}
 	fmt.Println(time.Now().Unix())
 }
 
