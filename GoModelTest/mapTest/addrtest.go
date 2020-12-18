@@ -2,11 +2,17 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
 
 func main() {
 	// addrtest()
-	MapTest()
+	// MapTest()
+}
+
+func syncMap() {
+	m := sync.Map{}
+	fmt.Println(m)
 }
 
 type addr struct {

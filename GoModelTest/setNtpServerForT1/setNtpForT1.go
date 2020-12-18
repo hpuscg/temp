@@ -10,7 +10,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"gitlab.deepglint.com/junkaicao/glog"
 	"io"
 	"io/ioutil"
@@ -19,6 +18,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"time"
 )
 
 var (
@@ -27,19 +27,16 @@ var (
 )
 
 const (
-	token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQxMTQ4MzIzODUsImlzcyI6ImRlZXBnbGludCIsIlVzZXJ" +
+	flowserviceToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQwOTg0OTQ4MzMsImlzcyI6ImRlZXBnbGludCIsIl" +
+		"VzZXJJRCI6ImZsb3dzZXJ2aWNlIn0.ubMv0T3FTVURQG2E6YPForuq4ixX_sq5nI0JXn4Q6Io"
+	bumbleToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQxMTQ4MzIzODUsImlzcyI6ImRlZXBnbGludCIsIlVzZXJ" +
 		"JRCI6ImJ1bWJsZSJ9.VWGZm5LkQDoyukekwg6KEG-BbAkP28lcpx8D32t5mLw"
 )
 
 func main() {
 	flag.StringVar(&IpList, "ipList", "./ip.txt", "sensor ip list file")
-	flag.StringVar(&NtpServer, "ntpServer", "", "ntp server")
 	flag.Parse()
 	glog.Config(glog.WithAlsoToStd(true), glog.WithFilePath("./logs"), glog.WithLevel("info"))
-	if "" == NtpServer {
-		glog.Warningln("please input ntp server")
-		return
-	}
 	fi, err := os.Open(IpList)
 	if err != nil {
 		glog.Infof("Error: %s\n", err)
@@ -61,8 +58,7 @@ func main() {
 			glog.Infof("%s 网络不通，请检查\n", sensorIp)
 			continue
 		}
-		url := "http://" + sensorIp + "/api/synctime"
-		runApp(url)
+		runApp(sensorIp)
 	}
 }
 
@@ -80,10 +76,9 @@ func tryPing(ip string) error {
 }
 
 type DateSource struct {
-	Mode   int
-	Server string
-	Ntp    string
-	Date   string
+	Mode int
+	Ntp  string
+	Date string
 }
 
 type ResponseData struct {
@@ -93,26 +88,70 @@ type ResponseData struct {
 	Data     interface{} `json:"data"`
 }
 
-func runApp(url string) {
+func GetNtpServer(ip string) {
+	getNtpServerUrl := "http://" + ip + "/api/f/logininfo"
+	client := &http.Client{}
+	client.Timeout = 30 * time.Second
+	req, err := http.NewRequest("GET", getNtpServerUrl, nil)
+	req.Close = true
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("authorization", flowserviceToken)
+	resp, err := client.Do(req)
+	var respData ResponseData
+	if resp == nil || err != nil {
+		glog.Warningln(err)
+		return
+	}
+	defer resp.Body.Close()
+	byteData, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+	err = json.Unmarshal(byteData, &respData)
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+	switch tt := respData.Data.(type) {
+	case map[string]interface{}:
+		for key, value := range tt {
+			if "url" == key {
+				switch value.(type) {
+				case string:
+					NtpServer = strings.TrimSuffix(strings.TrimPrefix(value.(string), "http://"), ":8888")
+				}
+			}
+		}
+	}
+}
+
+func SetNtpServer(ip string) {
 	iotInfo := DateSource{
-		Server: "",
-		Mode:   1,
-		Ntp:    "192.168.101.8",
-		Date:   "",
+		Mode: 1,
+		Ntp:  NtpServer,
+		Date: "",
 	}
 	ret, err := json.Marshal(iotInfo)
 	if err != nil {
-		fmt.Println(err)
+		glog.Infoln(err)
+		return
 	}
+	ntpSetUrl := "http://" + ip + "/api/synctime"
 	client1 := &http.Client{}
-	req1, err := http.NewRequest("PUT", url, strings.NewReader(string(ret)))
+	client1.Timeout = 30 * time.Second
+	req1, err := http.NewRequest("PUT", ntpSetUrl, strings.NewReader(string(ret)))
 	req1.Close = true
 	if err != nil {
 		glog.Infoln(err)
 		return
 	}
 	req1.Header.Set("Content-Type", "application/json")
-	req1.Header.Add("authorization", token)
+	req1.Header.Add("authorization", bumbleToken)
 	response1, err := client1.Do(req1)
 	if err != nil {
 		glog.Infoln(err)
@@ -130,4 +169,9 @@ func runApp(url string) {
 		glog.Infoln(err)
 	}
 	glog.Infoln(respData1.Msg)
+}
+
+func runApp(ip string) {
+	GetNtpServer(ip)
+	SetNtpServer(ip)
 }

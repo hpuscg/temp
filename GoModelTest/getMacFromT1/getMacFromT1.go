@@ -72,7 +72,7 @@ func main() {
 		if err != nil {
 			glog.Infoln(err)
 		}
-		glog.Infoln(ret)
+		glog.Infoln("\n", ret)
 	}
 }
 
@@ -91,7 +91,7 @@ func tryPing(ip string) error {
 
 // run cmd
 func runLiveCommand(cmd string) (log string, err error) {
-	session, err := connect("root", sensorIp, port)
+	session, err := connect("ubuntu", sensorIp, port)
 	if err != nil {
 		info := fmt.Sprintf("connect to %s err : %s", sensorIp, err)
 		glog.Infoln(info)

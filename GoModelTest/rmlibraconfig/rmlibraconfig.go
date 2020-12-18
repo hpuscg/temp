@@ -26,14 +26,16 @@ import (
 )
 
 var (
-	sensorIp string
-	port int
+	sensorIp   string
+	port       int
 	sensorList string
+	cmdStr     string
 )
 
 func main() {
 	flag.StringVar(&sensorList, "sensorList", "ipList.txt", "sensor ip list file name")
 	flag.IntVar(&port, "port", 22, "ssh port")
+	flag.StringVar(&cmdStr, "cmdStr", "", "远程执行的命令")
 	flag.Parse()
 	MvOldLog()
 	// 初始化glog配置
@@ -74,8 +76,8 @@ func runApp() {
 }
 
 func rmLibraLog() {
-	rmString := "rm /home/deepglint/AppData/libraT/config/libra_v3.json"
-	RunCmd(rmString)
+	// rmString := "rm /home/deepglint/AppData/libraT/config/libra_v3.json"
+	RunCmd(cmdStr)
 }
 
 // 测试设备IP能否ping通

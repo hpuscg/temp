@@ -1,0 +1,4 @@
+{"level":"error","time":"2020-12-03T12:40:18+08:00","caller":"/Users/hpu_scg/gocode/src/temp/GoModelTest/zeroLogTest/zeroLog.go:38","message":"yes"}
+[90m12:40PM[0m [1m[31mERR[0m[0m [1mzeroLog.go:38[0m[36m >[0m yes
+[90m2020-12-03T12:44:36+08:00[0m [1m[31mERR[0m[0m [1mzeroLog.go:39[0m[36m >[0m yes
+2020-12-03T12:46:14+08:00 ERR zeroLog.go:39 > yes

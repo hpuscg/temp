@@ -11,7 +11,7 @@ import (
 	"fmt"
 )
 
-const fileName = "/home/deepglint/AppData/libraT/config/devinfo.txt"
+const fileName = "/home/devinfo.txt"
 
 func main() {
 	catDevInfo()

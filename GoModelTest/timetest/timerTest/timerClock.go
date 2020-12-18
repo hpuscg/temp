@@ -1,13 +1,21 @@
 package main
 
 import (
-	"time"
 	"fmt"
+	"time"
 )
 
-func main()  {
+func main() {
 	// timerClock()
-	timeWeek()
+	// timeWeek()
+	nanoTest()
+}
+
+func nanoTest() {
+	t1 := time.Now().UnixNano()/1000000
+	time.Sleep(1 * time.Second)
+	t2 := time.Now().UnixNano()/1000000
+	fmt.Println(t2 - t1)
 }
 
 func timeWeek() {
@@ -26,7 +34,7 @@ func timerClock() {
 				timer1 <- false
 			}
 			num1 -= 1
-			time.Sleep(1 *time.Second)
+			time.Sleep(1 * time.Second)
 		}
 		timer1 <- true
 		return
@@ -35,17 +43,16 @@ func timerClock() {
 	for true {
 
 		var num2 bool
-		num2 = <- timer1
+		num2 = <-timer1
 		if num2 {
 			fmt.Println("yes")
 			break
-		}else {
+		} else {
 			fmt.Println("no")
 		}
-		time.Sleep(100 )
+		time.Sleep(100)
 	}
 	time2 := time.Now().Unix()
 	time3 := time2 - time1
 	fmt.Println(time3)
 }
-
