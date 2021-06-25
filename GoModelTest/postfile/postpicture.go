@@ -1,5 +1,5 @@
 /*
-#Time      :  2019/2/25 上午11:22 
+#Time      :  2019/2/25 上午11:22
 #Author    :  chuangangshen@deepglint.com
 #File      :  postfile.go
 #Software  :  GoLand
@@ -8,19 +8,23 @@ package main
 
 import (
 	"bytes"
-	"mime/multipart"
-	"os"
-	"io"
-	"net/http"
-	"io/ioutil"
-	"os/exec"
-	"time"
-	"strings"
-	"strconv"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"os/exec"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func main() {
+	PostFile("1.txt", "http://127.0.0.1:8789/event/upload/file")
+}
+
+func run() {
 	serverStr := "etcdctl get /config/global/server_addr"
 	serverAddr := ExecCmd(serverStr)
 	if serverAddr == "\n" {
@@ -84,7 +88,7 @@ func ExecCmd(str string) string {
 func PostFile(fileName, targetUrl string) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", fileName)
+	fileWriter, err := bodyWriter.CreateFormFile("uploadFile", fileName)
 	if err != nil {
 		return err
 	}
@@ -99,21 +103,62 @@ func PostFile(fileName, targetUrl string) error {
 	}
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
-	resp, err := http.Post(targetUrl, contentType, bodyBuf)
+	params := map[string]string{
+		"eventId": "eventId",
+	}
+	for key, val := range params {
+		fmt.Println(key, val)
+		_ = bodyWriter.WriteField(key, val)
+	}
+	// resp, err := http.Post(targetUrl, contentType, bodyBuf)
+	reqData := io.MultiReader(bodyBuf)
+	resp, err := PostFileWithToken(targetUrl, contentType, reqData)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	fmt.Println(resp)
+	/*defer resp.Body.Close()
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
-	}
+	}*/
 	return nil
 }
 
+func PostFileWithToken(url, contentType string, data io.Reader) (body []byte, err error) {
+	client := &http.Client{}
+	var (
+		req      *http.Request
+		response *http.Response
+	)
+	req, err = http.NewRequest("POST", url, data)
+	req.Close = true
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	req.Header.Set("Content-Type", contentType)
+	// req.Header.Add("authorization", token)
+	req.Header.Set("Connection", "close")
+	req.Header.Set("eventId", "no-cache")
+	// req.Form.Add("eventIds", "000")
+	response, err = client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer response.Body.Close()
+	body, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	return
+}
+
 func RemoveOldData() {
-	for i := 1; i < 365 ; i++ {
-		strTime := strconv.Itoa(-24 * i) + "h"
+	for i := 1; i < 365; i++ {
+		strTime := strconv.Itoa(-24*i) + "h"
 		d, _ := time.ParseDuration(strTime)
 		yearMonthDay := time.Now().Add(d).Format("20060102")
 		filePath := "/tmp/" + yearMonthDay + "/"

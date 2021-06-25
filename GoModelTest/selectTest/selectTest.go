@@ -1,5 +1,5 @@
 /*
-#Time      :  2019/5/15 上午10:21 
+#Time      :  2019/5/15 上午10:21
 #Author    :  chuangangshen@deepglint.com
 #File      :  selectTest.go
 #Software  :  GoLand
@@ -14,15 +14,24 @@ import (
 var (
 	Test1 chan string
 	Test2 = make(chan string)
+	a     = "123"
 )
 
 func main() {
-	go SendChannel()
+	// go SendChannel()
 	// SelectTest()
 	// fmt.Println(time.Now().UnixNano())
 	// fmt.Println(time.Now().Unix())
 	// test2()
-	selectChannel()
+	// selectChannel()
+	switchTest(a)
+}
+
+func switchTest(a interface{}) {
+	switch v := a.(type) {
+	case string:
+		fmt.Print(v)
+	}
 }
 
 func selectChannel() {
@@ -45,12 +54,12 @@ func test2() {
 			fmt.Println(1111)
 			goto L
 		default:
-			time.Sleep(1*time.Second)
+			time.Sleep(1 * time.Second)
 			fmt.Println(2222)
 		}
 	}
-	L:
-		fmt.Println(33333)
+L:
+	fmt.Println(33333)
 
 }
 
@@ -62,7 +71,7 @@ func SelectTest() {
 		case msg := <-Test2:
 			fmt.Println("222:", msg)
 			fmt.Println("22222")
-		goto Loop
+			goto Loop
 		default:
 			fmt.Println("333333")
 			time.Sleep(1 * time.Second)

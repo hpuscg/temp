@@ -8,4 +8,5 @@ package config
 
 type System struct {
 	DbType string
+	Env    string
 }

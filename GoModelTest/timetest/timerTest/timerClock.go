@@ -2,19 +2,25 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 )
 
 func main() {
 	// timerClock()
 	// timeWeek()
-	nanoTest()
+	// nanoTest()
+	TimeStamp()
+}
+
+func TimeStamp() {
+	fmt.Println(strconv.Itoa(int(time.Now().UnixNano())))
 }
 
 func nanoTest() {
-	t1 := time.Now().UnixNano()/1000000
+	t1 := time.Now().UnixNano() / 1000000
 	time.Sleep(1 * time.Second)
-	t2 := time.Now().UnixNano()/1000000
+	t2 := time.Now().UnixNano() / 1000000
 	fmt.Println(t2 - t1)
 }
 

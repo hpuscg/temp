@@ -1,5 +1,5 @@
 /*
-#Time      :  2019/1/2 下午5:09 
+#Time      :  2019/1/2 下午5:09
 #Author    :  chuangangshen@deepglint.com
 #File      :  timeUTC.go
 #Software  :  GoLand
@@ -7,14 +7,14 @@
 package main
 
 import (
-	"time"
 	"fmt"
+	"time"
 )
 
 func main() {
 	// timeUTC()
-	// TimeUtcTest()
-	countSum()
+	TimeUtcTest()
+	// countSum()
 }
 
 func countSum() {
@@ -37,8 +37,8 @@ func timeUTC() {
 }
 
 func TimeUtcTest() {
-	t1 := time.Now().Unix()
+	t1 := time.Now().UnixNano()
 	time.Sleep(1 * time.Second)
-	t2 := time.Now().Unix()
-	fmt.Println(t2 - t1)
+	t2 := time.Now().UnixNano()
+	fmt.Println(t2/1000000, t1/1000000)
 }

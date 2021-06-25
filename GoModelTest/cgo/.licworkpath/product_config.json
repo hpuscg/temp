@@ -1,0 +1,14 @@
+{
+	"version": "V2",
+	"uuid": "00000000000000006333303236313039",
+	"auth_days_total": 1,
+	"auth_date_gen": "2021-04-15",
+	"auth_date_deadline": "2021-04-16",
+	"check_method": "countdown",
+	"lic_src": {
+		"function": "人脸抓拍",
+		"lic_type": "app_auth",
+		"others": "",
+		"video_chan": 4
+	}
+}

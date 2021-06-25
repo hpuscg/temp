@@ -13,16 +13,14 @@ package main
 void sayYes(){
     printf("yes!\n");
 }
- */
+*/
 import "C"
-import "sync"
 
-func main(){
+func main() {
 	C.sayHello()
 	C.sayYes()
 }
 
 func MapLock() {
-	sync.Map{}
+	// sync.Map{}
 }
-

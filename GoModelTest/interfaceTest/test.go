@@ -3,13 +3,15 @@ package main
 import "fmt"
 
 func main() {
-	testInterface()
+	// testInterface()
+	intTest()
 }
 
-func testInterface()  {
+func testInterface() {
 	var value interface{}
 	fmt.Println(value)
 }
 
-
-
+func intTest() {
+	fmt.Println(5 / 2)
+}

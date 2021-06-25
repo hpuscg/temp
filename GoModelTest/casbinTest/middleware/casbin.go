@@ -8,6 +8,8 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"temp/GoModelTest/casbinTest/global"
+	"temp/GoModelTest/casbinTest/model/response"
 	"temp/GoModelTest/casbinTest/service"
 )
 
@@ -21,7 +23,7 @@ func CasbinHandler(c *gin.Context) {
 	e := service.Casbin()
 	// 判断策略中是否存在
 	success, _ := e.Enforce(sub, obj, act)
-	if global.GVA_CONFIG.System.Env == "develop" || success {
+	if global.Server.System.Env == "develop" || success {
 		c.Next()
 	} else {
 		response.FailWithDetailed(gin.H{}, "权限不足", c)

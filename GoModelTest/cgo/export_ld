@@ -1,0 +1,4 @@
+export LD_LIBRARY_PATH=/Users/hpu_scg/gocode/src/gitlab.deepglint.com/idg/tools/LicMan/so/out/target
+export LICWORKPATH=.
+export LICAPPLYPATH=.
+export ELAPSEDSECOND=600

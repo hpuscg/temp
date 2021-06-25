@@ -6,8 +6,12 @@
 */
 package global
 
-import "temp/GoModelTest/casbinTest/config"
+import (
+	"go.uber.org/zap"
+	"temp/GoModelTest/casbinTest/config"
+)
 
 var (
 	Server config.Server
+	Logger *zap.Logger
 )

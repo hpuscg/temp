@@ -10,4 +10,5 @@ type Server struct {
 	Mysql Mysql
 	System System
 	Casbin Casbin
+	Local Local
 }

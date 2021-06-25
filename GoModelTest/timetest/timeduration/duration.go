@@ -1,21 +1,26 @@
 package main
 
 import (
-	"time"
 	"fmt"
 	"reflect"
 	"strconv"
+	"time"
 )
 
-func main(){
+func main() {
 	// fmt.Println(time.Duration(6666666600000))
 	// a := 20
 	// TimeSwitch(20)
 	// DurationSwitchTest()
-	timeString()
+	// timeString()
+	TimeNow()
 }
 
-func timeString()  {
+func TimeNow() {
+	fmt.Println(time.Now().Unix())
+}
+
+func timeString() {
 	fmt.Println(strconv.FormatInt(time.Now().Unix(), 10) + "")
 }
 

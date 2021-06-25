@@ -7,15 +7,31 @@
 package main
 
 import (
-	"os"
-	"net"
+	"encoding/json"
 	"fmt"
+	"net"
+	"os"
+	"reflect"
+	"time"
 )
 
 func main() {
 	// GetIpByInterfaceAddrs()
-	GetIpByInterface()
+	// GetIpByInterface()
 	// GetIpByDial()
+	t := time.Now()
+	weekday := t.Weekday()
+	fmt.Println(1<<byte(weekday))
+	// ByteTest()
+}
+
+func ByteTest() {
+	a := "aaaa"
+	b, err := json.Marshal(a)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(reflect.TypeOf(b[0]))
 }
 
 func GetIpByDial() {

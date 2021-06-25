@@ -1,0 +1,4 @@
+p, zeta, data1, read, allow
+p, bob, data2, write, allow
+p, zeta, data2, write, deny
+p, zeta, data1, write, allow
