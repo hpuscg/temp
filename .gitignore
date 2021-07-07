@@ -3,3 +3,4 @@
 *.amd64
 *upgradeByAuto
 *.log
+.vscode*

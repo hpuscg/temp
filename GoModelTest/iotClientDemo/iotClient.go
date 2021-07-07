@@ -18,7 +18,9 @@ var (
 	ConnectionLostHandler = func(client MQTT.Client, err error) {
 		fmt.Println("mqtt lost connected")
 	}
-	IotTopic    = "topic/haomu"
+	DeviceId    = "a1f20f445035323133000003004d00e9"
+	IotTopic    = "topic/haomuT"
+	Topic       = "msg/" + DeviceId
 	MqttOptions *MQTT.ClientOptions
 )
 
@@ -41,13 +43,19 @@ func main() {
 	SetOpts()
 	IotConnect()
 	PublishMessage()
+	for {
+		select {
+		default:
+			time.Sleep(1 * time.Second)
+		}
+	}
 }
 
 // 给iot-server发送消息
 func PublishMessage() {
 	iotMessage := IoTMessageInfo{
-		MsgType:  1,
-		DeviceId: "001test",
+		MsgType:  11,
+		DeviceId: DeviceId,
 	}
 	data, err := json.Marshal(iotMessage)
 	if err != nil {
@@ -74,10 +82,10 @@ func IotConnect() {
 				fmt.Println("IOT client connect to server ok")
 
 				// 接收iot-server的消息
-				if token := MqttClient.Subscribe(IotTopic, 0, msgRecv); token.Wait() && token.Error() != nil {
+				if token := MqttClient.Subscribe(Topic, 0, msgRecv); token.Wait() && token.Error() != nil {
 					fmt.Println("Iot client subscribe error :", token.Error())
 				}
-				break
+				return
 			}
 		}
 	}
