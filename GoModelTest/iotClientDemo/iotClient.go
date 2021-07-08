@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"time"
+
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
 var (
@@ -18,8 +19,8 @@ var (
 	ConnectionLostHandler = func(client MQTT.Client, err error) {
 		fmt.Println("mqtt lost connected")
 	}
-	DeviceId    = "a1f20f445035323133000003004d00e9"
-	IotTopic    = "topic/haomuT"
+	DeviceId    = "a1f20f445035323133000003004d00e1"
+	IotTopic    = "topic/haomut"
 	Topic       = "msg/" + DeviceId
 	MqttOptions *MQTT.ClientOptions
 )
@@ -34,28 +35,54 @@ type Dispatcher struct {
 }
 
 type IoTMessageInfo struct {
-	MsgType  int    `json:"msg_type"`
-	DeviceId string `json:"deviceid"`
+	MsgType    int                    `json:"msg_type"`
+	DeviceId   string                 `json:"deviceid"`
+	SN         string                 `json:"sn"`
+	Name       string                 `json:"devicename"`
+	Model      string                 `json:"devmodel"`
+	AppName    string                 `json:"appname"`
+	AppVersion string                 `json:"appver"`
+	OsName     string                 `json:"osname"`
+	OsVersion  string                 `json:"osver"`
+	IP         string                 `json:"deviceip"`
+	ProtoVer   int                    `json:"protover"`
+	AppsInfo   []struct{}             `json:"appsinfo"`
+	ExtDevInfo map[string]interface{} `json:"extdevinfo"`
 	// 请参考https://confluence.deepglint.com/pages/viewpage.action?pageId=11078244
 }
 
 func main() {
 	SetOpts()
 	IotConnect()
-	PublishMessage()
+	InitPublishMessage()
 	for {
-		select {
-		default:
-			time.Sleep(1 * time.Second)
-		}
+		PublishMessage()
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 // 给iot-server发送消息
 func PublishMessage() {
 	iotMessage := IoTMessageInfo{
-		MsgType:  11,
+		MsgType:  1,
 		DeviceId: DeviceId,
+	}
+	data, err := json.Marshal(iotMessage)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	PublishResponseInfo(data)
+}
+
+// 注册设备
+func InitPublishMessage() {
+	iotMessage := IoTMessageInfo{
+		MsgType:    1,
+		DeviceId:   DeviceId,
+		Model:      "HC-BA311",
+		AppName:    "libraT",
+		AppVersion: "11",
 	}
 	data, err := json.Marshal(iotMessage)
 	if err != nil {
@@ -67,26 +94,23 @@ func PublishMessage() {
 
 func IotConnect() {
 	ticker := time.NewTicker(time.Duration(5) * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			if MqttClient != nil {
-				MqttClient.Disconnect(250)
-				fmt.Println("IOT MqttClient disconnect!")
-			}
-			// 建立连接
-			MqttClient = MQTT.NewClient(MqttOptions)
-			if token := MqttClient.Connect(); token.Wait() && token.Error() != nil {
-				fmt.Println("IOT client connect to server fail :", token.Error())
-			} else {
-				fmt.Println("IOT client connect to server ok")
+	for range ticker.C {
+		if MqttClient != nil {
+			MqttClient.Disconnect(250)
+			fmt.Println("IOT MqttClient disconnect!")
+		}
+		// 建立连接
+		MqttClient = MQTT.NewClient(MqttOptions)
+		if token := MqttClient.Connect(); token.Wait() && token.Error() != nil {
+			fmt.Println("IOT client connect to server fail :", token.Error())
+		} else {
+			fmt.Println("IOT client connect to server ok")
 
-				// 接收iot-server的消息
-				if token := MqttClient.Subscribe(Topic, 0, msgRecv); token.Wait() && token.Error() != nil {
-					fmt.Println("Iot client subscribe error :", token.Error())
-				}
-				return
+			// 接收iot-server的消息
+			if token := MqttClient.Subscribe(Topic, 0, msgRecv); token.Wait() && token.Error() != nil {
+				fmt.Println("Iot client subscribe error :", token.Error())
 			}
+			return
 		}
 	}
 }
@@ -95,15 +119,15 @@ func IotConnect() {
 func SetOpts() {
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker("192.168.100.238:1883")
-	opts.SetUsername("styun")
-	opts.SetPassword("styun!@#$")
-	opts.SetClientID("test01")
+	opts.SetUsername("haomut")
+	opts.SetPassword("haomut!@#$")
+	opts.SetClientID(DeviceId)
 	opts.KeepAlive = 20
 	opts.AutoReconnect = false
 	opts.SetCleanSession(true)
 	will := WillJson{
 		MsgType:  255,
-		DeviceId: "test01",
+		DeviceId: DeviceId,
 	}
 	willData, err := json.Marshal(will)
 	if err != nil {
@@ -125,13 +149,13 @@ func msgRecv(client MQTT.Client, message MQTT.Message) {
 		return
 	}
 	fmt.Printf("Iot Received message on topic: %s msg_type: %d\nMessage: %s", message.Topic(), dispatcher.MsgType, message.Payload())
-	return
 }
 
 func PublishResponseInfo(data []byte) {
 	if len(data) == 0 {
 		return
 	}
+	fmt.Println(string(data))
 	token := MqttClient.Publish(IotTopic, 1, false, data)
 	token.Wait()
 }
