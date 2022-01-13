@@ -1,0 +1,216 @@
+{
+   "DeviceInfo" : {
+      "DeviceName" : "F157"
+   },
+   "EventServer" : {
+      "Passwd" : "abc@Dgsh",
+      "Server" : "http://192.168.101.8:8888",
+      "User" : "haomuF"
+   },
+   "IotServer" : {
+      "Passwd" : "haomuf!@#$",
+      "Server" : "tcp://192.168.101.8:1883",
+      "TopicUplink" : "topic/haomuf",
+      "User" : "haomuf"
+   },
+   "NTPServer" : {
+      "Server" : "192.168.101.8"
+   },
+   "RsyncConfig" : null,
+   "Usescenes" : null,
+   "VideoSource" : [
+      {
+         "Chid" : 1,
+         "Facealgo" : {
+            "DSM" : {
+               "DetThrd" : 0,
+               "DetectNoneEndWarnTime" : 0,
+               "DetectNoneStartWarnTime" : 0,
+               "DetectNoneingIntervalTime" : 0,
+               "EyeCloseThrd" : 0,
+               "HeaddownAngularThrd" : 0,
+               "HeaddownEndWarnTime" : 0,
+               "HeaddownStartWarnTime" : 0,
+               "HeaddowningIntervalTime" : 0,
+               "HeartBeatUploadTime" : 0,
+               "PhoneEndWarnTime" : 0,
+               "PhoneStartWarnTime" : 0,
+               "PhoneThrd" : 0,
+               "PhoneingIntervalTime" : 0,
+               "Roi" : null,
+               "SleepEndWarnTime" : 0,
+               "SleepStartWarnTime" : 0,
+               "SleepingIntervalTime" : 0,
+               "SmokeEndWarnTime" : 0,
+               "SmokeStartWarnTime" : 0,
+               "SmokeThrd" : 0,
+               "SmokeingIntervalTime" : 0
+            },
+            "FaceDet" : {
+               "BlurThrd" : 0,
+               "DetectThrd" : 0.75,
+               "FaceHeight" : 216,
+               "FaceWidth" : 384,
+               "PeopleThrd" : 0.92000000000000004,
+               "QualityThrd" : 0.90000000000000002,
+               "Roi" : [
+                  {
+                     "Height" : 1080,
+                     "Width" : 1920,
+                     "X" : 0,
+                     "Y" : 0
+                  }
+               ],
+               "TrackToleranceTimeMs" : 3000
+            },
+            "FaceRecognize" : {
+               "FeatureSize" : 384,
+               "RecognizeThrd" : 80
+            }
+         },
+         "FgUpload" : {
+            "Ftp" : {
+               "Enable" : true,
+               "Passwd" : "xxxxxxxx",
+               "Port" : 4321,
+               "RemoteDir" : "facecap/$DEVICEID",
+               "Server" : "255.255.255.255",
+               "User" : "nemocam"
+            },
+            "Gat1400" : {
+               "DeviceId" : "31000000005055000001",
+               "Enable" : true,
+               "Passwd" : "xxxxxx",
+               "Port" : 80,
+               "Server" : "172.17.0.214",
+               "User" : "admin"
+            },
+            "PassRecord" : {
+               "Enable" : false,
+               "Passwd" : "xxxxxxxxxx",
+               "Server" : "http://255.255.255.255:8081",
+               "User" : "admin"
+            },
+            "PrivateZeromq" : {
+               "Enable" : false
+            },
+            "Ufile" : {
+               "Enable" : false
+            }
+         },
+         "Funcmode" : 2,
+         "GateCtrl" : {
+            "Port" : 0
+         },
+         "JpegEnc" : {
+            "EnableScene" : true,
+            "Quality" : 80
+         },
+         "Passwd" : "xxxxxxxxxx",
+         "ShowVideo" : false,
+         "ShrinkD" : 4,
+         "ShrinkN" : 1,
+         "Url" : "usbcamera://USB Camera Col",
+         "User" : "admin"
+      },
+      {
+         "Chid" : 0,
+         "Facealgo" : {
+            "DSM" : {
+               "DetThrd" : 0.75,
+               "DetectNoneEndWarnTime" : 5,
+               "DetectNoneStartWarnTime" : 300,
+               "DetectNoneingIntervalTime" : 60,
+               "EyeCloseThrd" : 0.80000000000000004,
+               "HeaddownAngularThrd" : -25,
+               "HeaddownEndWarnTime" : 5,
+               "HeaddownStartWarnTime" : 300,
+               "HeaddowningIntervalTime" : 10,
+               "HeartBeatUploadTime" : 300,
+               "PhoneEndWarnTime" : 5,
+               "PhoneStartWarnTime" : 300,
+               "PhoneThrd" : 0.80000000000000004,
+               "PhoneingIntervalTime" : 10,
+               "Roi" : [
+                  {
+                     "Height" : 1080,
+                     "Width" : 1920,
+                     "X" : 0,
+                     "Y" : 0
+                  }
+               ],
+               "SleepEndWarnTime" : 5,
+               "SleepStartWarnTime" : 600,
+               "SleepingIntervalTime" : 10,
+               "SmokeEndWarnTime" : 5,
+               "SmokeStartWarnTime" : 5,
+               "SmokeThrd" : 0.5,
+               "SmokeingIntervalTime" : 5
+            },
+            "FaceDet" : {
+               "BlurThrd" : 0,
+               "DetectThrd" : 0,
+               "FaceHeight" : 0,
+               "FaceWidth" : 0,
+               "PeopleThrd" : 0,
+               "QualityThrd" : 0,
+               "Roi" : null,
+               "TrackToleranceTimeMs" : 0
+            },
+            "FaceRecognize" : {
+               "FeatureSize" : 0,
+               "RecognizeThrd" : 0
+            }
+         },
+         "FgUpload" : {
+            "Ftp" : {
+               "Enable" : false,
+               "Passwd" : "",
+               "Port" : 0,
+               "RemoteDir" : "",
+               "Server" : "",
+               "User" : ""
+            },
+            "Gat1400" : {
+               "DeviceId" : "",
+               "Enable" : false,
+               "Passwd" : "",
+               "Port" : 0,
+               "Server" : "",
+               "User" : ""
+            },
+            "PassRecord" : {
+               "Enable" : false,
+               "Passwd" : "",
+               "Server" : "",
+               "User" : ""
+            },
+            "PrivateZeromq" : {
+               "Enable" : false
+            },
+            "Ufile" : {
+               "Enable" : false
+            }
+         },
+         "Funcmode" : 3,
+         "GateCtrl" : {
+            "Port" : 0
+         },
+         "JpegEnc" : {
+            "EnableScene" : false,
+            "Quality" : 0
+         },
+         "Passwd" : "123",
+         "ShowVideo" : false,
+         "ShrinkD" : 0,
+         "ShrinkN" : 0,
+         "Url" : "usbcamera://USB Camera Nir",
+         "User" : "123"
+      }
+   ],
+   "WebConfig" : {
+      "HomeLogo" : "/home/deepglint/AppData/HaoMuF/logo/homeLogo.jpeg",
+      "LoginLogo" : "/home/deepglint/AppData/HaoMuF/logo/loginLogo.jpeg",
+      "Title" : "三维智能分析设备"
+   }
+}

@@ -53,7 +53,9 @@ type IoTMessageInfo struct {
 
 func main() {
 	SetOpts()
+	fmt.Printf("%+v", MqttOptions)
 	IotConnect()
+	fmt.Println(MqttClient)
 	InitPublishMessage()
 	for {
 		PublishMessage()
@@ -118,13 +120,14 @@ func IotConnect() {
 // 设置iot-client参数
 func SetOpts() {
 	opts := MQTT.NewClientOptions()
-	opts.AddBroker("192.168.100.238:1883")
+	opts.AddBroker("192.168.17.239:1883")
 	opts.SetUsername("haomut")
 	opts.SetPassword("haomut!@#$")
 	opts.SetClientID(DeviceId)
 	opts.KeepAlive = 20
 	opts.AutoReconnect = false
 	opts.SetCleanSession(true)
+	// opts.SetProtocolVersion(3)
 	will := WillJson{
 		MsgType:  255,
 		DeviceId: DeviceId,

@@ -1,25 +1,28 @@
 package main
 
 import (
-	"net/http"
-	"io/ioutil"
+	"crypto/md5"
 	"fmt"
 	"io"
-	"github.com/julienschmidt/httprouter"
+	"io/ioutil"
+	"net/http"
 	"os"
-	"strings"
 	"path/filepath"
-	"crypto/md5"
+	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
 	/*
-	// 方法二
-	// router.StartTest(":5678")
+		// 方法二
+		// router.StartTest(":5678")
 	*/
 	// run()
-	runApp()
+	// runApp()
+	runGin()
 }
 
 func runApp() {
@@ -60,7 +63,7 @@ func handleUploadFile(rw http.ResponseWriter, req *http.Request, p httprouter.Pa
 			defer f.Close()
 			if err != nil {
 				fmt.Println(err)
-				http.Error(rw, "file error:" + err.Error(), 501)
+				http.Error(rw, "file error:"+err.Error(), 501)
 				return
 			}
 			s := make([]byte, 4096)
@@ -76,7 +79,7 @@ func handleUploadFile(rw http.ResponseWriter, req *http.Request, p httprouter.Pa
 					f.Write(s[0:nr])
 				}
 			}
-			L:
+		L:
 			data, err := ioutil.ReadFile(fileAbsPath)
 			md5Hash = fmt.Sprintf("%x", md5.Sum(data))
 			fmt.Println(md5Hash)
@@ -88,15 +91,26 @@ func handleUploadFile(rw http.ResponseWriter, req *http.Request, p httprouter.Pa
 	}
 }
 
+func runGin() {
+	gin.SetMode(gin.DebugMode)
+	e := gin.New()
+	server := &http.Server{
+		Addr:    ":0",
+		Handler: e,
+	}
+	server.ListenAndServe()
+
+}
+
 func run() {
 	http.HandleFunc("/event", HandedRequest)
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":0", nil)
 	if err != nil {
 		return
 	}
 }
 
-func HandedRequest(rw http.ResponseWriter, req *http.Request)  {
+func HandedRequest(rw http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	result, err := ioutil.ReadAll(req.Body)
 	defer req.Body.Close()

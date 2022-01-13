@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"strings"
-	"os"
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
-	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -18,17 +18,17 @@ func main() {
 	// byteToString()
 	// justTest()
 	// strIntTest()
-	// stringSplit()
+	stringSplit()
 	// preTest()
 	// stringToIntTest()
 	// FilePathJoinTest()
-	intTest()
+	// intTest()
 }
 
 func intTest() {
 	a := 1
 	b := 2
-	fmt.Println(float64(a)/float64(b))
+	fmt.Println(float64(a) / float64(b))
 }
 
 func FilePathJoinTest() {
@@ -42,7 +42,7 @@ func stringToIntTest() {
 	var data interface{}
 	var ret int
 	var err error
-	var tmp int32 =123
+	var tmp int32 = 123
 	data = tmp
 	switch data.(type) {
 	case string:
@@ -65,10 +65,17 @@ func preTest() {
 
 func stringSplit() {
 	s := "rtsp://192.168.12.12/libra/www"
-	var ret string
-	ss := strings.SplitN(s, "/", 4)
+	// var ret string
+	// ss := strings.SplitN(s, "/", -1)
+	n := strings.LastIndex(s, "/")
+	pre := s[:n]
+	fmt.Println(pre)
+	ss := s[n+1:]
+	fmt.Println(ss)
+	ss1 := strings.SplitAfterN(s, "/", 2)
+	fmt.Println(ss1)
 	//strings.SplitAfterN()
-	for i, data := range ss {
+	/* for i, data := range ss {
 		fmt.Printf("%d=%s\n", i, data)
 		ret = strings.Join([]string{
 			ret,
@@ -76,10 +83,10 @@ func stringSplit() {
 		}, "/")
 	}
 	ret1 := strings.Trim(ret, "/")
-	fmt.Println(ret1)
+	fmt.Println(ret1) */
 }
 
-func strIntTest()  {
+func strIntTest() {
 	// strTime := strconv.Itoa(-24 * 2) + "h"
 	// fmt.Println(strTime)
 	fmt.Println(strings.HasPrefix("1234", "34"))
@@ -105,23 +112,23 @@ func test1() {
 	// fmt.Println(a)
 	// fmt.Println(len(a))
 	/*
-	// a := "[552:false 742:false 543:false 721:false 743:false 130:false 1001:false 631:false 722:false 120:false 550:false 632:false 129:false 139:false 630:false 540:false 553:false 633:false 723:false 1000:false 740:false 1003:false 541:false 542:false 1002:false 720:false 741:false 551:false]"
-	a := "[\"552\":false, \"742\":false]"
-	var sv map[string]bool
-	err := json.Unmarshal([]byte(a), &sv)
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println(sv)
-	}
+		// a := "[552:false 742:false 543:false 721:false 743:false 130:false 1001:false 631:false 722:false 120:false 550:false 632:false 129:false 139:false 630:false 540:false 553:false 633:false 723:false 1000:false 740:false 1003:false 541:false 542:false 1002:false 720:false 741:false 551:false]"
+		a := "[\"552\":false, \"742\":false]"
+		var sv map[string]bool
+		err := json.Unmarshal([]byte(a), &sv)
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Println(sv)
+		}
 	*/
 
 	/*
-	m := map[string]string{
-        "LOG_LEVEL": "DEBUG",
-        "API_KEY":   "12345678-1234-1234-1234-1234-123456789abc",
-    }
-	println(createKeyValuePairs(m))
+			m := map[string]string{
+		        "LOG_LEVEL": "DEBUG",
+		        "API_KEY":   "12345678-1234-1234-1234-1234-123456789abc",
+		    }
+			println(createKeyValuePairs(m))
 	*/
 	mapvalue := make(map[string]string)
 	mapvalue["wer"] = "123"
@@ -142,13 +149,12 @@ func test1() {
 	fmt.Println(allUpStr)
 }
 
-
 func createKeyValuePairs(m map[string]string) string {
-    b := new(bytes.Buffer)
-    for key, value := range m {
-        fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
-    }
-    return b.String()
+	b := new(bytes.Buffer)
+	for key, value := range m {
+		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
+	}
+	return b.String()
 }
 
 func toLower(str string) string {
@@ -211,7 +217,7 @@ func byteToString() {
 	fmt.Println(data2)
 }
 
-func justTest()  {
+func justTest() {
 	data := 1 == 2
 	fmt.Println(data)
 }

@@ -4,18 +4,36 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"github.com/tarm/serial"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/tarm/serial"
 )
 
 var (
-	gLog *log.Logger
+	gLog       *log.Logger
+	sensorType string
 )
 
 func main() {
+	tty485()
+	// pathTest()
+}
+
+func pathTest() {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(strings.Replace(dir, "\\", "/", -1))
+}
+
+func tty485() {
+	flag.StringVar(&sensorType, "type", "sw-wb", "relay type")
 	logFile, err := os.OpenFile("./log", os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		fmt.Printf("open file error=%s\r\n", err.Error())
@@ -34,6 +52,7 @@ func main() {
 	// readDataFromTty()
 
 	flag.Parse()
+	fmt.Println(sensorType)
 	getTtyData()
 }
 
@@ -65,40 +84,34 @@ func getTtyData() {
 			strTemp = hex.EncodeToString(bufTemp)
 			gLog.Println(strTemp)
 		}
-		// ZT-IRSXD011
-		/*for key, value := range bufTemp {
-			if 6 == key {
-				realStatus = fmt.Sprintf("%x", value)
-			}
-		}
-		if "55" == preStatus && "aa" == realStatus {
-			// if ("55" == preStatus || "" == preStatus) && "aa" == realStatus {
-
-			gLog.Println("begin")
-		}*/
-
-		for key, value := range strTemp {
-			if 1 == key {
-				if "0" == string(value) {
-					goto L
+		switch sensorType {
+		case "d011": // ZT-IRSXD011
+			for key, value := range bufTemp {
+				if key == 6 {
+					realStatus = fmt.Sprintf("%x", value)
 				}
 			}
-			if 11 == key {
-				realStatus = string(value)
+		case "sw-wb": // sw-wb
+			for key, value := range strTemp {
+				if key == 1 {
+					if string(value) == "0" {
+						goto L
+						// realStatus = string(value)
+					}
+				}
+				if key == 11 {
+					realStatus = string(value)
+				}
 			}
-			// gLog.Printf("key:%d, value:%s", key, string(value))
+		case "d012": // ZT-IRSXD012
+			for key, value := range strTemp {
+				if key == 11 {
+					realStatus = string(value)
+				}
+			}
 		}
-		/*if "0" == preStatus && "1" == realStatus {
-
-			gLog.Println("begin")
-		} else if "1" == preStatus && "0" == realStatus {
-
-			gLog.Println("end")
-		}*/
-		time.Sleep(100 * time.Microsecond)
 		gLog.Println(realStatus)
 	L:
 		continue
-		// preStatus = realStatus
 	}
 }

@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	PostFile("1.txt", "http://127.0.0.1:8789/event/upload/file")
+	PostFile("1.txt", "http://127.0.0.1:9000/file")
 }
 
 func run() {
@@ -86,42 +86,32 @@ func ExecCmd(str string) string {
 }
 
 func PostFile(fileName, targetUrl string) error {
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
+	var bodyBuf bytes.Buffer
+	bodyWriter := multipart.NewWriter(&bodyBuf)
+	bodyWriter.WriteField("eventId", "1234444")
+	bodyWriter.WriteField("ip", "127.0.0.22")
 	fileWriter, err := bodyWriter.CreateFormFile("uploadFile", fileName)
 	if err != nil {
 		return err
 	}
-	fh, err := os.Open(fileName)
+	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return err
 	}
-	defer fh.Close()
-	_, err = io.Copy(fileWriter, fh)
-	if err != nil {
-		return err
-	}
-	contentType := bodyWriter.FormDataContentType()
+	fileWriter.Write(data)
 	bodyWriter.Close()
-	params := map[string]string{
-		"eventId": "eventId",
-	}
-	for key, val := range params {
-		fmt.Println(key, val)
-		_ = bodyWriter.WriteField(key, val)
-	}
-	// resp, err := http.Post(targetUrl, contentType, bodyBuf)
-	reqData := io.MultiReader(bodyBuf)
-	resp, err := PostFileWithToken(targetUrl, contentType, reqData)
+	// reqData := io.MultiReader(bodyBuf)
+	req, err := http.NewRequest("POST", targetUrl, &bodyBuf)
 	if err != nil {
 		return err
+	}
+	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
+	var client http.Client
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 	fmt.Println(resp)
-	/*defer resp.Body.Close()
-	_, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}*/
 	return nil
 }
 

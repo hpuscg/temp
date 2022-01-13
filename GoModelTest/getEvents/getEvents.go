@@ -1,5 +1,5 @@
 /*
-#Time      :  2019/1/16 上午10:59 
+#Time      :  2019/1/16 上午10:59
 #Author    :  chuangangshen@deepglint.com
 #File      :  getEvents.go
 #Software  :  GoLand
@@ -7,26 +7,27 @@
 package main
 
 import (
-	"github.com/segmentio/nsq-go"
-	"gopkg.in/mgo.v2/bson"
-	"github.com/deepglint/util/jsontime"
+	"bufio"
 	"encoding/json"
 	"fmt"
-	"bufio"
-	"strings"
-	"os"
 	"io"
+	"os"
 	"strconv"
+	"strings"
+
+	"github.com/deepglint/util/jsontime"
+	"github.com/segmentio/nsq-go"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Event struct {
-	Id                   bson.ObjectId          "_id" //`json:"_id,omitempty"` //auto generate, don't fill it
-	StartTime            *jsontime.Timestamp          //`bson:"starttime,omitempty" json:"starttime,omitempty"`
-	TimeLength           int                          //ms
-	SliceLength          int                          //`bson:"-" json:"-"` //ms
-	AlarmLevel           int                          //compute by backend, don't fill it
-	EventType            int                          //see values in EventTypeXXX consts
-	EventTypeProbability float32                      //[0,1]
+	Id                   bson.ObjectId       "_id" //`json:"_id,omitempty"` //auto generate, don't fill it
+	StartTime            *jsontime.Timestamp //`bson:"starttime,omitempty" json:"starttime,omitempty"`
+	TimeLength           int                 //ms
+	SliceLength          int                 //`bson:"-" json:"-"` //ms
+	AlarmLevel           int                 //compute by backend, don't fill it
+	EventType            int                 //see values in EventTypeXXX consts
+	EventTypeProbability float32             //[0,1]
 	PlanetId             string
 	SceneId              string
 	SensorId             string
@@ -34,8 +35,8 @@ type Event struct {
 	UserId               string
 	PeopleId             string //需要给出全局唯一的ID
 	PeopleNum            int
-	Path                 []int32                `bson:",omitempty" json:",omitempty"` //mm, in sequence of [x1,y1,z1,x2,y2,z2...]
-	DetectionStatus      []int                  `bson:",omitempty" json:",omitempty"`
+	Path                 []int32 `bson:",omitempty" json:",omitempty"` //mm, in sequence of [x1,y1,z1,x2,y2,z2...]
+	DetectionStatus      []int   `bson:",omitempty" json:",omitempty"`
 	FrameRate            int
 	ColorPanel16x16      []float32              `bson:",omitempty" json:",omitempty"` //[0..1], ab space, splite by 16*16
 	LightPanel16         []float32              `bson:",omitempty" json:",omitempty"` // L space, splite by 16
@@ -50,22 +51,22 @@ type Event struct {
 }
 
 var (
-	LibraAddr string
-	EventType int
+	LibraAddr string = "192.168.101.147"
+	EventType int    = 0
 )
 
 func main() {
-	readConfig()
+	/* readConfig()
 	if "" == LibraAddr {
 		LibraAddr = "10.147.40.19"
-	}
+	} */
 	// fmt.Println("sensor ip is :", LibraAddr)
 	getNsqMessage()
 }
 
 // get event message from sensor nsq
 func getNsqMessage() {
-	fmt.Println("=======1======")
+	fmt.Println("=======1======", LibraAddr)
 	consumer, _ := nsq.StartConsumer(nsq.ConsumerConfig{
 		Topic:       "vibo_events",
 		Channel:     "abcbank4scg",
@@ -84,7 +85,7 @@ func getNsqMessage() {
 		}
 		if 0 == EventType {
 			fmt.Printf("\n%+v\n", event)
-		} else  if event.EventType == EventType {
+		} else if event.EventType == EventType {
 			fmt.Printf("\n%+v\n", event)
 		}
 		// fmt.Printf("\n%+v\n", event)

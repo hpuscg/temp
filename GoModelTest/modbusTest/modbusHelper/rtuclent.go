@@ -199,7 +199,7 @@ func (mb *rtuSerialTransporter) Send(aduRequest []byte) (aduResponse []byte, err
 	if err = writeFile(mb.FileName, mb.InValue, mb.FileEnable); err != nil {
 		return
 	}
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	// Send the request
 	mb.serialPort.logf("modbus: sending % x\n", aduRequest)
 	fmt.Printf("modbus: sending % x\n", aduRequest)

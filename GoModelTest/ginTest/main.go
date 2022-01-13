@@ -8,14 +8,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"io"
 	"net"
 	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	// zeroTest()
-	printTest()
+	// printTest()
+	GinTest()
 }
 
 func printTest() {
@@ -49,6 +53,7 @@ func GinTest() {
 	e.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
+	e.POST("/file", UploadFile)
 	e.NoRoute()
 	server := &http.Server{
 		Addr: net.JoinHostPort("127.0.0.1",
@@ -58,5 +63,26 @@ func GinTest() {
 	fmt.Printf("app run on %s\n", server.Addr)
 	if err := server.ListenAndServe(); err != nil {
 		fmt.Printf("app run error: %s", err)
+	}
+}
+
+func UploadFile(c *gin.Context) {
+	fmt.Println(c.PostForm("eventId"))
+	fmt.Println(c.PostForm("ip"))
+	file, header, err := c.Request.FormFile("uploadFile")
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Printf("%+v\n", header)
+	out, err := os.Create("/Users/hpu_scg/gocode/src/temp/GoModelTest/ginTest/" + header.Filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer out.Close()
+	_, err = io.Copy(out, file)
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 }
