@@ -48,9 +48,23 @@ func struct2map() {
 	fmt.Println(tmp["weight"])*/
 }
 
+func structInit() {
+	sshreq := struct {
+		persist bool
+		open    bool
+		port    int
+	}{
+		false,
+		true,
+		22,
+	}
+	fmt.Printf("%+v", sshreq)
+}
+
 func main() {
 	// initStruck()
 	// initMap()
 	// structTest()
-	struct2map()
+	// struct2map()
+	structInit()
 }

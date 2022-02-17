@@ -1,0 +1,6 @@
+#!/bin/bash
+if [ "$1" == "on" ]; then
+        set_devio -gpio usb -mode on
+else
+        set_devio -gpio usb -mode off
+fi

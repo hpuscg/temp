@@ -6,6 +6,21 @@ import (
 )
 
 func main() {
+	/* t := sliceTest()
+	fmt.Print(t) */
+	socketClient()
+}
+
+/* func sliceTest() [][]int {
+	var temp = [][]int{
+		{1, 2, 3, 4},
+		{3, 4, 5},
+	}
+	temp = append(temp, []int{1, 2, 3})
+	return temp
+} */
+
+func socketClient() {
 	conn, err := net.Dial("tcp", ":9999")
 	if err != nil {
 		log.Fatal(err)

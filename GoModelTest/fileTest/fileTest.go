@@ -8,7 +8,6 @@ package main
 
 import (
 	"fmt"
-	"gitlab.deepglint.com/junkaicao/glog"
 	"io"
 	"io/ioutil"
 	"os"
@@ -17,16 +16,32 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
+
+	"gitlab.deepglint.com/junkaicao/glog"
 )
 
 func main() {
 	glog.Config(glog.WithAlsoToStd(true), glog.WithFilePath("./"), glog.WithLevel("info"))
 	// GetFile()
 	// GetDirFileNames()
-	for {
+	/* for {
 		ReadTtyFile()
 		time.Sleep(1 * time.Second)
+	} */
+	ReadFile()
+}
+
+func ReadFile() {
+	f, err := os.Open("/Users/hpu_scg/Desktop/a1f20f44503536363700001600a5011d.reset_pass.lic")
+	if err != nil {
+		fmt.Println(err)
 	}
+	data, err := io.ReadAll(f)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("1111")
+	fmt.Println(string(data))
 }
 
 func ReadTtyFile() {
