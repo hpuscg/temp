@@ -16,6 +16,7 @@ require (
 	github.com/deepglint/go-nsq v0.3.6
 	github.com/deepglint/util v0.0.0-20171013084239-f6a8b3f8a19c
 	github.com/eclipse/paho.mqtt.golang v1.3.3 // indirect
+	github.com/flopp/go-findfont v0.1.0 // indirect
 	github.com/go-martini/martini v0.0.0-20170121215854-22fa46961aab
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/goburrow/modbus v0.1.0
@@ -54,6 +55,7 @@ require (
 	github.com/xiaomi-tc/log15 v0.0.0-20191113113727-7f66c2abf493
 	gitlab.deepglint.com/junkaicao/glog v0.0.0-20200424072246-b0fce7ef62ea
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	golang.org/x/mobile v0.0.0-20220224134551-8a0a1e50732f // indirect
 	gopkg.in/alecthomas/kingpin.v1 v1.3.7 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/yaml.v2 v2.4.0
