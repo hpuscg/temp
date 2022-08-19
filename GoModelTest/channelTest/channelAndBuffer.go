@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func main()  {
+func main() {
 	// noBuffer()
 	// useBuffer()
 	channelLength()
@@ -13,7 +13,7 @@ func main()  {
 	fmt.Println("ok")
 }
 
-func f1(in chan int)  {
+func f1(in chan int) {
 	for {
 		fmt.Println(<-in)
 		fmt.Println("continue")
@@ -21,21 +21,32 @@ func f1(in chan int)  {
 	}
 }
 
-func noBuffer()  {
+func noBuffer() {
 	out := make(chan int)
 	go f1(out)
 	out <- 2
 }
 
-
-func useBuffer()  {
+func useBuffer() {
 	out := make(chan int, 1)
 	out <- 3
 	go f1(out)
 }
 
-func channelLength()  {
+func channelLength() {
 	e := make(chan int, 10)
 	fmt.Println(len(e))
 }
 
+func forChannel() {
+	// var testChannel chan int
+	testChannel := make(chan int, 100)
+	for {
+		select {
+		case <-testChannel:
+			fmt.Print("channel data")
+		default:
+			fmt.Print("no data")
+		}
+	}
+}

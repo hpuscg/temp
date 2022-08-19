@@ -1,0 +1,17 @@
+deviceinfos:
+- ip: 192.168.101.182
+  name: 自研1808测试
+  iotinfo:
+    username: haomut
+    password: haomut!@#$
+    server: 192.168.101.8:1883
+    topic: topic/haomut
+  eventserverinfo:
+    username: haomuT
+    password: abc@Dgsh
+    url: http://192.168.101.8:8888
+  ntpinfo:
+    mode: 1
+    server: ""
+    ntp: cn.pool.ntp.org
+    date: Thu May  5 15:45:25 CST 2022

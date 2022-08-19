@@ -1,0 +1,32 @@
+config:
+  clear_cycle: 3600
+  event_status_ttl: 10
+  persistence_cycle: 60
+  post_video: false
+  reset_time: 10
+  tss_ttl_days: 30
+eventserver:
+  password: abc@Dgsh
+  pub_http_url: http://IP:8888
+  username: haomuT
+rule:
+  brightchanged_legacy:
+  - alertfilterdata:
+      id: brightchanged_legacy
+      enabled: true
+      timerange:
+      - 0
+      - 0
+    upperbound: 0
+    lowerbound: 0
+    eventtype: brightchanged_legacy
+  latch_legacy:
+  - alertfilterdata:
+      id: latch_legacy
+      enabled: true
+      timerange:
+      - 0
+      - 0
+    upperbound: 0
+    lowerbound: 0
+    eventtype: latch_legacy

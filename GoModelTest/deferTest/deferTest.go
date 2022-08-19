@@ -1,5 +1,5 @@
 /*
-#Time      :  2019/1/21 下午4:11 
+#Time      :  2019/1/21 下午4:11
 #Author    :  chuangangshen@deepglint.com
 #File      :  deferTest.go
 #Software  :  GoLand
@@ -11,15 +11,22 @@ import (
 	"time"
 )
 
+func hello(i []int) {
+	fmt.Println(i[0])
+}
+
 func main() {
 	// testDefer()
-	defer_call()
+	// defer_call()
+	i := make([]int, 3)
+	defer hello(i)
+	i[0] = 3
 }
 
 func defer_call() {
 
 	defer func() {
-		if err := recover();err != nil {
+		if err := recover(); err != nil {
 			fmt.Println(err) //err 就是panic传入的参数
 		}
 		fmt.Println("打印前")
@@ -30,7 +37,6 @@ func defer_call() {
 		fmt.Println("打印中")
 	}()
 
-
 	defer func() {
 
 		fmt.Println("打印后")
@@ -38,9 +44,7 @@ func defer_call() {
 	panic("触发异常")
 }
 
-
-
-func testDefer()  {
+func testDefer() {
 	defer func() {
 		fmt.Println("a")
 		if err := recover(); err != nil {
@@ -55,6 +59,3 @@ func testDefer()  {
 	c := b / a
 	fmt.Println(c)
 }
-
-
-

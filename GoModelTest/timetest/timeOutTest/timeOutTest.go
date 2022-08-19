@@ -13,7 +13,7 @@ import (
 func main() {
 	for {
 		var timeout int
-		go func() 
+		go func()
 			for true {
 				// var cmd *exec.Cmd
 				switch timeout{
@@ -74,15 +74,18 @@ func main() {
 }
 */
 
-
-
 func main() {
+	dateTime := time.Unix((2022-1970)*365*24*60*60, 0)
+	dateTime = time.Now()
+	fmt.Println(dateTime.UTC().Format("2006-01-02 15:04:05"))
+	fmt.Println(dateTime.Local().Format("2006-01-02 15:04:05"))
+	fmt.Println(dateTime.UTC().Unix())
+	fmt.Println(dateTime.Local().Unix())
+	/* fmt.Println(time.Now().Format("2006-01-02T15-04-05"))
 	fmt.Println("111")
-	tc := time.After(3*time.Second)
+	tc := time.After(3 * time.Second)
 	fmt.Println("222")
 	fmt.Println("333")
 	<-tc
-	fmt.Println("444")
+	fmt.Println("444") */
 }
-
-

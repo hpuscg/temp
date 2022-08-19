@@ -8,21 +8,31 @@ import (
 )
 
 func main() {
-	// syncMap()
-	stringTest()
+	syncMap()
+	// stringTest()
+	// fmt.Println(time.Now().Unix())
+	// fmt.Println(time.Now().UnixNano() / 1000000)
 }
 
 func syncMap() {
 	var count int
 	var mapTest = sync.Map{}
-
-	mapTest.Store("1", "3")
-	mapTest.Store("2", "4")
+	for i := 1; i <= 10; i++ {
+		mapTest.Store(i, i)
+	}
 	mapTest.Range(func(key, value interface{}) bool {
 		count += 1
+		if key.(int) < 5 {
+			fmt.Println(key)
+			mapTest.Delete(key)
+		}
 		return true
 	})
-	fmt.Println(count)
+	fmt.Printf("%+v\n", mapTest)
+	mapTest.Range(func(key, value interface{}) bool {
+		fmt.Println(key)
+		return true
+	})
 }
 
 func strByXOR(message string, keywords string) string {

@@ -95,11 +95,16 @@ func runGin() {
 	gin.SetMode(gin.DebugMode)
 	e := gin.New()
 	server := &http.Server{
-		Addr:    ":0",
+		Addr:    ":8686",
 		Handler: e,
 	}
+	e.GET("/api/download", DownloadFile)
 	server.ListenAndServe()
 
+}
+
+func DownloadFile(c *gin.Context) {
+	c.File("/Users/hpu_scg/Desktop/HaomuT+L-fdu-21.08.27.01.tar.gz")
 }
 
 func run() {

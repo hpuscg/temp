@@ -1,5 +1,5 @@
 /*
-#Time      :  2018/12/21 下午6:55 
+#Time      :  2018/12/21 下午6:55
 #Author    :  chuangangshen@deepglint.com
 #File      :  httpGetTest.go
 #Software  :  GoLand
@@ -10,8 +10,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -21,13 +23,68 @@ func main() {
 	flag.Parse()
 	// t := Teacher{}
 	// t.ShowA()
-	getToken(ip)
+	// getToken(ip)
 	// PostEvent(ip)
 	// GetSensorId()
 	// GetRealPeopleNum("192.168.19.247")
 	// GetRGBValue()
 	// getFromT3()
 	// getPackageVersionFromServer()
+	// getBigFile()
+	closureTest()
+}
+
+func closureTest() {
+	a := app()
+	b := app()
+	fmt.Println(a("go"))
+	fmt.Println(b("All"))
+	fmt.Println(a("ALL"))
+}
+
+func app() func(string) string {
+	t := "Hi"
+	c := func(b string) string {
+		t = t + " " + b
+		return t
+	}
+	return c
+}
+
+type Downloader struct {
+	io.Reader
+	Total   int64
+	Current int64
+}
+
+func (d *Downloader) Read(p []byte) (n int, err error) {
+	n, err = d.Reader.Read(p)
+	d.Current += int64(n)
+	fmt.Printf("\r正在下载，下载进度：%.2f%%", float64(d.Current*10000/d.Total)/100)
+	if d.Current == d.Total {
+		fmt.Printf("\r下载完成，下载进度：%.2f%%\n", float64(d.Current*10000/d.Total)/100)
+	}
+	return
+}
+
+func getBigFile() {
+	resp, err := http.Get("http://127.0.0.1:8686/api/download")
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	fi, err := os.Create("/Users/hpu_scg/Desktop/temp.tar")
+	if err != nil {
+		panic(err)
+	}
+	defer fi.Close()
+	downloader := &Downloader{
+		Reader: resp.Body,
+		Total:  resp.ContentLength,
+	}
+	if _, err := io.Copy(fi, downloader); err != nil {
+		panic(err)
+	}
 }
 
 func getPackageVersionFromServer() {
@@ -69,7 +126,6 @@ func getPackageVersionFromServer() {
 		fmt.Printf("%+v\n", ret.Data.(map[string]interface{}))
 	}
 }*/
-
 
 /*func main() {
 	for true {
@@ -158,7 +214,7 @@ func CookieTest() {
 var token string
 
 // const Token  = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoYW9tdVQiLCJhdXRob3JpdGllcyI6IltdIiwiZXhwIjoxNTUyNDgyNjgzfQ.JA4N4ASM0h6RX8UtzucJ9EIntHhxnjkkwMdrYl0wGojRpHPvvQ_t5TAaWQVcPccvfbMda1OxhV9Hm5aB6ki8sg"
-const Token  = ""
+const Token = ""
 
 func PostEvent(ip string) {
 	code, err := postEvent(ip, Token)
@@ -176,7 +232,7 @@ func PostEvent(ip string) {
 }
 
 func getToken(ip string) {
-	addr := "http://" + ip +"/api/eventserver/authenticate"
+	addr := "http://" + ip + "/api/eventserver/authenticate"
 	userName := "haomuT"
 	passWord := "abc@Dgsh"
 
@@ -208,9 +264,9 @@ func getToken(ip string) {
 
 type HttpEvent struct {
 	DeviceId    string      `json:"deviceId"`
-	DeviceType  int      `json:"deviceType"`
+	DeviceType  int         `json:"deviceType"`
 	EventType   int         `json:"eventType"`
-	EventTime   string         `json:"eventTime"`
+	EventTime   string      `json:"eventTime"`
 	EventDetail interface{} `json:"eventDetail"`
 }
 
@@ -218,9 +274,9 @@ func postEvent(ip, Tk string) (code float64, err error) {
 	addr := "http://" + ip + "/api/eventserver/eventUpload"
 	client := &http.Client{}
 	postData, err := json.Marshal(HttpEvent{
-		DeviceId: "123qweasdzxc",
+		DeviceId:   "123qweasdzxc",
 		DeviceType: 1,
-		EventType: 119,
+		EventType:  119,
 	})
 	if err != nil {
 		fmt.Println("120 err :", err)
